@@ -1,0 +1,15 @@
+# Python virtual environment
+venv/
+__pycache__/
+*.pyc
+
+# Environment variables file
+.env
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+
+# Uploads folder (if you don't want user-uploaded content in your repo)
+/uploads/

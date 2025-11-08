@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Mark Attendance{% endblock %}
+{% block content %}
+    <h2>Mark Attendance for Period {{ period }} on {{ date }}</h2>
+    
+    <!-- STEP 1: The form now has a simple ID -->
+    <form id="attendance-form" action="{{ url_for('staff.submit_attendance') }}" method="POST">
+        <input type="hidden" name="period" value="{{ period }}">
+        <div class="table-container">
+            <table>
+                <thead><tr><th>Roll No</th><th>Name</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>{{ student.roll_no }}</td>
+                        <td>{{ student.name }}</td>
+                        <td>
+                            <input type="hidden" name="student_id" value="{{ student.student_id }}">
+                            <label style="margin-right: 1rem;"><input type="radio" name="status_{{ student.student_id }}" value="Present" checked> Present</label>
+                            <label><input type="radio" name="status_{{ student.student_id }}" value="Absent"> Absent</label>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <button type="submit" class="btn" style="margin-top: 20px;">Submit Attendance</button>
+    </form>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // =========================================================================
+            // === STEP 2: The JavaScript now uses the simple ID to find the form ===
+            // =========================================================================
+            const form = document.getElementById('attendance-form');
+            if (form) {
+                const submitButton = form.querySelector('button[type="submit"]');
+
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Getting Your Location...';
+                    submitButton.style.backgroundColor = '#6c757d';
+
+                    if (!navigator.geolocation) {
+                        alert('Geolocation is not supported. Cannot submit attendance.');
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Attendance';
+                        submitButton.style.backgroundColor = '';
+                        return;
+                    }
+
+                    function success(position) {
+                        const latInput = document.createElement('input');
+                        latInput.type = 'hidden';
+                        latInput.name = 'latitude';
+                        latInput.value = position.coords.latitude;
+                        form.appendChild(latInput);
+
+                        const lonInput = document.createElement('input');
+                        lonInput.type = 'hidden';
+                        lonInput.name = 'longitude';
+                        lonInput.value = position.coords.longitude;
+                        form.appendChild(lonInput);
+                        
+                        form.submit();
+                    }
+
+                    function error() {
+                        alert('Could not get your location. Please enable location services and allow this site to access it.');
+                        submitButton.disabled = false;
+                        submitButton.textContent = 'Submit Attendance';
+                        submitButton.style.backgroundColor = '';
+                    }
+
+                    navigator.geolocation.getCurrentPosition(success, error, {
+                        enableHighAccuracy: true, timeout: 10000, maximumAge: 0
+                    });
+                });
+            }
+        });
+    </script>
+{% endblock %}

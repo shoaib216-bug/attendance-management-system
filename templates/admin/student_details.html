@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Details for {{ student.name }}{% endblock %}
+{% block content %}
+    <h2>Student Details</h2>
+    <div class="form-container" style="max-width: none; margin-bottom: 2rem;">
+        <h3>{{ student.name }}</h3>
+        <p><strong>Roll No:</strong> {{ student.roll_no }}</p>
+        <p><strong>Branch:</strong> {{ student.branch }}</p>
+        <p><strong>Semester:</strong> {{ student.semester }}</p>
+        <p><strong>Parent Contact:</strong> {{ student.parent_contact }}</p>
+        <hr>
+        <h4>Overall Attendance: <span style="font-size: 1.5rem; color: #007bff; font-weight: bold;">{{ '%.2f'|format(percentage) }}%</span></h4>
+    </div>
+    <h3>Attendance History</h3>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Date</th><th>Period</th><th>Status</th><th>Marked By (Staff)</th></tr></thead>
+            <tbody>
+                {% for record in records %}
+                <tr>
+                    <td>{{ record.date.strftime('%d-%b-%Y') }}</td>
+                    <td>{{ record.period }}</td>
+                    <td><span class="status-{{ record.status|lower }}">{{ record.status }}</span></td>
+                    <td>{{ record.staff.name if record.staff else 'N/A' }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="4">No attendance records found for this student.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div style="text-align: center; margin-top: 2rem;"><a href="{{ url_for('admin.view_students') }}" class="btn" style="background-color: #6c757d;">Back to Student List</a></div>
+{% endblock %}

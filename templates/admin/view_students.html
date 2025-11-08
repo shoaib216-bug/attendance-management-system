@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}View Students{% endblock %}
+
+{% block content %}
+<h2>All Students</h2>
+
+<!-- Search Form -->
+<div class="form-container" style="max-width: none; margin: 0 0 2rem 0; padding: 1.5rem;">
+    <form method="GET" action="{{ url_for('admin.view_students') }}">
+        <div class="form-group" style="margin-bottom: 0;">
+            <label for="search_query">Search by Name or Roll Number</label>
+            <input type="text" id="search_query" name="q" placeholder="Enter search term..."
+                value="{{ search_query or '' }}">
+        </div>
+        <button type="submit" class="btn" style="margin-top: 1rem;">Search</button>
+        <a href="{{ url_for('admin.view_students') }}" class="btn"
+            style="background-color: #6c757d; margin-top: 1rem;">Clear</a>
+    </form>
+</div>
+
+<!-- Student List Table -->
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Roll No</th>
+                <th>Branch</th>
+                <th>Semester</th>
+                <th>Parent Contact</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- ========================================================================= -->
+            <!-- === THIS IS THE CORRECTED LOOP STRUCTURE === -->
+            <!-- ========================================================================= -->
+            {% for student in students %}
+            <tr>
+                <td>{{ student.student_id }}</td>
+                <td>
+                    <!-- This is the new clickable link -->
+                    <a href="{{ url_for('admin.student_details', student_id=student.student_id) }}">
+                        {{ student.name }}
+                    </a>
+                </td>
+                <td>
+                                        <a href="{{ url_for('admin.student_details', student_id=student.student_id) }}">
+{{ student.roll_no }}</td>
+                <td>{{ student.branch }}</td>
+                <td>{{ student.semester }}</td>
+                <!-- This now displays the correct field -->
+                <td>{{ student.parent_contact }}</td>
+            </tr>
+            {% else %}
+            <!-- This 'else' part runs if the 'students' list is empty -->
+            <tr>
+                <td colspan="6" style="text-align: center;">
+                    {% if search_query %}
+                    No students found matching your search for "{{ search_query }}".
+                    {% else %}
+                    No students have been added to the system yet.
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %} <!-- THE for LOOP MUST END HERE -->
+            <!-- ========================================================================= -->
+        </tbody>
+    </table>
+</div>
+
+<a href="{{ url_for('admin.dashboard') }}" class="btn" style="margin-top: 20px;">Back to Dashboard</a>
+
+{% endblock %} <!-- THE main content BLOCK ENDS HERE -->

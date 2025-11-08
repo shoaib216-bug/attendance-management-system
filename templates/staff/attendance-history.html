@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Attendance History{% endblock %}
+{% block content %}
+    <div class="form-container" style="max-width: 700px;">
+        <h2>View Attendance History</h2>
+        <p>Search for all attendance records taken on a specific day.</p>
+        <form method="POST" action="{{ url_for('staff.attendance_history') }}">
+            <div class="form-group">
+                <label for="date">Select Date</label>
+                <input type="date" id="date" name="date" value="{{ search_date or '' }}" required>
+            </div>
+            <button type="submit" class="btn">Search Records</button>
+        </form>
+    </div>
+
+    {% if records is not none %}
+        <h3 style="margin-top: 2rem;">Attendance Records for {{ search_date }}</h3>
+        {% if records %}
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Student Name</th>
+                        <th>Roll No</th>
+                        <th>Status</th>
+                        <th>Taken By</th>
+                        <th>Time</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in records %}
+                    <tr>
+                        <td><strong>{{ record.period }}</strong></td>
+                        <td>{{ record.student.name }}</td>
+                        <td>{{ record.student.roll_no }}</td>
+                        <td><span class="status-{{ record.status|lower }}">{{ record.status }}</span></td>
+                        <td>{{ record.staff.name if record.staff else 'N/A' }}</td>
+                        <td>{{ record.timestamp.strftime('%I:%M %p') if record.timestamp else 'N/A' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p style="margin-top: 1rem;">No attendance records were found for this date.</p>
+        {% endif %}
+    {% endif %}
+
+    <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ url_for('staff.dashboard') }}" class="btn" style="background-color: #6c757d;">Back to Dashboard</a>
+    </div>
+{% endblock %}

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+    <h1>Admin Dashboard</h1>
+    <p style="text-align: center; font-size: 1.2rem; margin-bottom: 2rem;">Welcome, {{ current_user.username }}!</p>
+
+    <!-- The entire logo section has been completely removed. -->
+    <!-- There are no forms for 'upload_logo' or 'remove_logo' -->
+
+    <!-- Dashboard Actions Grid -->
+    <div class="dashboard-grid">
+        <a href="{{ url_for('admin.settings') }}" class="card">
+            <h3>System Settings</h3>
+            <p>Configure geolocation and other options.</p>
+        </a>
+        <a href="{{ url_for('admin.manage_semesters') }}" class="card">
+            <h3>Manage Semesters</h3>
+            <p>Create, view, and end academic semesters.</p>
+        </a>
+        <a href="{{ url_for('admin.add_student') }}" class="card">
+            <h3>Add Student</h3>
+            <p>Register a new student and create parent login.</p>
+        </a>
+        <a href="{{ url_for('admin.add_staff') }}" class="card">
+            <h3>Add Staff</h3>
+            <p>Register a new staff member.</p>
+        </a>
+        <a href="{{ url_for('admin.view_students') }}" class="card">
+            <h3>View All Students</h3>
+            <p>Search and see a list of registered students.</p>
+        </a>
+        <a href="{{ url_for('admin.view_staff') }}" class="card">
+            <h3>View All Staff</h3>
+            <p>See a list of all registered staff members.</p>
+        </a>
+    </div>
+
+{% endblock %}

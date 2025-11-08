@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}View Staff{% endblock %}
+
+{% block content %}
+    <h2>All Staff Members</h2>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Staff ID</th>
+                    <th>Name</th>
+                    <th>Username</th>
+                    <th>Branch</th>
+                    <th>Subject</th>
+                    <th>Contact No</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in staff %}
+                <tr>
+                    <td>{{ member.staff_id }}</td>
+                    <td>{{ member.name }}</td>
+                    <td>{{ member.username }}</td>
+                    <td>{{ member.branch }}</td>
+                    <td>{{ member.subject }}</td>
+                    <td>{{ member.contact_no }}</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">No staff members found. Add staff from the dashboard.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <a href="{{ url_for('admin.dashboard') }}" class="btn" style="margin-top: 20px;">Back to Dashboard</a>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Take Attendance{% endblock %}
+
+{% block content %}
+<div class="form-container" style="max-width: 600px;">
+    <h2>Take Attendance</h2>
+    <p>Welcome, {{ current_user.name }}! Select the class, semester, and period to begin.</p>
+    <hr style="margin-bottom: 1.5rem;">
+    
+    <form method="POST" action="{{ url_for('staff.dashboard') }}">
+        <div class="form-group">
+            <label for="branch">Branch</label>
+            <select id="branch" name="branch" class="form-control" required>
+                {% for branch in branches %}
+                    <option value="{{ branch }}">{{ branch }}</option>
+                {% else %}
+                    <option disabled selected>No branches available</option>
+                {% endfor %} <!-- CORRECTED: Was 'endif' -->
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="semester">Semester</label>
+            <select id="semester" name="semester" class="form-control" required>
+                {% for semester in semesters %}
+                    <option value="{{ semester }}">{{ semester }}</option>
+                {% else %}
+                    <option disabled selected>No semesters available</option>
+                {% endfor %} <!-- CORRECTED: Was 'endif' -->
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="period">Period Number</label>
+            <select id="period" name="period" class="form-control" required>
+                {% for i in range(1, 9) %}
+                    <option value="{{ i }}">Period {{ i }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <button type="submit" class="btn" {% if not branches %}disabled{% endif %}>Fetch Students</button>
+    </form>
+</div>
+
+<div style="text-align: center; margin-top: 2rem;">
+    <a href="{{ url_for('staff.attendance_history') }}">View Past Attendance History</a>
+</div>
+{% endblock %}

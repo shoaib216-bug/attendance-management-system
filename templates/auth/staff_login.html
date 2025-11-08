@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Staff Login{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h2>Staff Login</h2>
+    <form method="POST">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <!-- This is the password field with the toggle icon -->
+        <div class="form-group password-wrapper">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+            <i class="fas fa-eye password-toggle-icon" onclick="togglePassword('password')"></i>
+        </div>
+        <button type="submit" class="btn">Login</button>
+    </form>
+    <!-- This is the "Forgot Password?" link, only for staff -->
+    <div style="text-align: center; margin-top: 1rem;">
+        <a href="{{ url_for('auth.forgot_password') }}">Forgot Password?</a>
+    </div>
+</div>
+{% endblock %}

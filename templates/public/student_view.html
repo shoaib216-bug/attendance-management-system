@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Check Student Attendance{% endblock %}
+{% block content %}
+<div class="form-container">
+    <h2>Check Student Attendance</h2>
+    <p>Enter your Roll Number to view your attendance record.</p>
+    <form method="POST">
+        <div class="form-group">
+            <label for="roll_no">Roll Number</label>
+            <input type="text" id="roll_no" name="roll_no" required>
+        </div>
+        <button type="submit" class="btn">View Attendance</button>
+    </form>
+</div>
+{% if student %}
+<div style="margin-top: 2rem;">
+    <h3>Attendance for {{ student.name }} ({{ student.roll_no }})</h3>
+    <h4>Overall Percentage: <span style="color: #007bff;">{{ '%.2f'|format(percentage) }}%</span></h4>
+    <div class="table-container">
+        <table>
+            <thead><tr><th>Date</th><th>Period</th><th>Status</th><th>Marked By</th></tr></thead>
+            <tbody>
+                {% for record in records %}
+                <tr><td>{{ record.date.strftime('%d-%b-%Y') }}</td><td>{{ record.period }}</td><td><span class="status-{{ record.status|lower }}">{{ record.status }}</span></td><td>{{ record.staff.name if record.staff else 'N/A' }}</td></tr>
+                {% else %}
+                <tr><td colspan="4">No attendance records found for this student.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

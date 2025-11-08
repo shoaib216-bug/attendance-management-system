@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Semesters{% endblock %}
+
+{% block content %}
+    <h2>Manage Semesters</h2>
+    <p>Define academic semesters for each branch. Ending a semester will automatically promote all students within it to the next semester.</p>
+
+    <!-- Form to create a new semester -->
+    <div class="form-container" style="max-width: none; margin-bottom: 2rem;">
+        <h3>Create New Semester</h3>
+        <form method="POST">
+            <div class="form-group">
+                <label for="branch">Branch Name</label>
+                <input type="text" id="branch" name="branch" placeholder="e.g., Computer Science" required>
+            </div>
+            <div class="form-group">
+                <label for="semester_num">Semester Number</label>
+                <input type="number" id="semester_num" name="semester_num" min="1" max="8" required>
+            </div>
+            <div class="form-group">
+                <label for="start_date">Start Date</label>
+                <input type="date" id="start_date" name="start_date" required>
+            </div>
+            <div class="form-group">
+                <label for="end_date">End Date</label>
+                <input type="date" id="end_date" name="end_date" required>
+            </div>
+            <button type="submit" class="btn">Create Semester</button>
+        </form>
+    </div>
+
+    <!-- Table of existing semesters -->
+    <h3>Existing Semesters</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Branch</th>
+                    <th>Semester</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sem in semesters %}
+                <tr>
+                    <td>{{ sem.branch }}</td>
+                    <td>{{ sem.semester_num }}</td>
+                    <td>{{ sem.start_date.strftime('%d-%b-%Y') if sem.start_date else 'N/A' }}</td>
+                    <td>{{ sem.end_date.strftime('%d-%b-%Y') if sem.end_date else 'N/A' }}</td>
+                    <td>
+                        {% if sem.is_active %}
+                            <span style="color: green; font-weight: bold;">Active</span>
+                        {% else %}
+                            <span style="color: red;">Ended</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if sem.is_active %}
+                        <form method="POST" action="{{ url_for('admin.end_semester', sem_id=sem.id) }}" 
+                              onsubmit="return confirm('Are you absolutely sure you want to end this semester? This will promote all students in this semester and CANNOT be undone.');">
+                            <button type="submit" class="btn" style="background-color: #dc3545;">End Semester & Promote Students</button>
+                        </form>
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6">No semesters have been created yet.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+     <div style="text-align: center; margin-top: 2rem;">
+        <a href="{{ url_for('admin.dashboard') }}" class="btn" style="background-color: #6c757d;">Back to Dashboard</a>
+    </div>
+{% endblock %}
