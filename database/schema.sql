@@ -1,55 +1,75 @@
--- Create the database if it doesn't exist
-CREATE DATABASE IF NOT EXISTS college_management;
 
--- Use the created database
-USE college_management;
 
--- Drop tables if they exist to ensure a clean slate
-DROP TABLE IF EXISTS attendance;
-DROP TABLE IF EXISTS student;
-DROP TABLE IF EXISTS staff;
-DROP TABLE IF EXISTS admin;
+-- 1. Create Database only if it doesn't exist
+CREATE DATABASE IF NOT EXISTS attendance_management;
+USE attendance_management;
 
--- Create admin table
-CREATE TABLE admin (
+-- 2. Create Admin Table
+CREATE TABLE IF NOT EXISTS admin (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL
 );
 
--- Insert a default admin user. Username: admin, Password: password
-INSERT INTO admin (username, password) VALUES ('admin', 'pbkdf2:sha256:260000$hQGk3t5sJ3d9A2p1$d021c769411b339dcd292e3160b732731c34a6e3e57396a1a441b802e334f5a4');
-
--- Create staff table
-CREATE TABLE staff (
+-- 3. Create Staff Table (Corrected: NO Subject Column)
+CREATE TABLE IF NOT EXISTS staff (
     staff_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     username VARCHAR(50) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
     branch VARCHAR(50),
-    subject VARCHAR(100),
     contact_no VARCHAR(15)
 );
 
--- Create student table
-CREATE TABLE student (
+-- 4. Create Student Table
+CREATE TABLE IF NOT EXISTS student (
     student_id INT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     roll_no VARCHAR(20) UNIQUE NOT NULL,
     branch VARCHAR(50),
     semester INT,
-    parent_contact VARCHAR(15) NOT NULL,
-    password VARCHAR(255) NOT NULL
+    parent_contact VARCHAR(15) NOT NULL
 );
 
--- Create attendance table
-CREATE TABLE attendance (
+-- 5. Create Semesters Table
+CREATE TABLE IF NOT EXISTS semesters (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    branch VARCHAR(100) NOT NULL,
+    semester_num INT NOT NULL,
+    start_date DATE,
+    end_date DATE,
+    is_active BOOLEAN DEFAULT TRUE,
+    UNIQUE KEY `unique_semester` (`branch`, `semester_num`)
+);
+
+-- 6. Create Settings Table
+CREATE TABLE IF NOT EXISTS settings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    setting_key VARCHAR(50) UNIQUE NOT NULL,
+    setting_value VARCHAR(255)
+);
+
+-- 7. Create Attendance Table
+CREATE TABLE IF NOT EXISTS attendance (
     id INT AUTO_INCREMENT PRIMARY KEY,
     staff_id INT,
     student_id INT,
     date DATE NOT NULL,
+    period INT NOT NULL,
+    subject VARCHAR(100) NOT NULL,
     status ENUM('Present', 'Absent') NOT NULL,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (staff_id) REFERENCES staff(staff_id) ON DELETE SET NULL,
     FOREIGN KEY (student_id) REFERENCES student(student_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_attendance (student_id, date)
+    UNIQUE KEY `unique_period_attendance` (`student_id`, `date`, `period`)
 );
+
+-- 8. Insert Default Settings (Only if they don't exist yet)
+-- 'INSERT IGNORE' ensures this won't crash if settings are already there.
+INSERT IGNORE INTO settings (setting_key, setting_value) VALUES
+('college_latitude', '0.0'),
+('college_longitude', '0.0'),
+('allowed_radius_meters', '200'),
+('geolocation_enabled', 'true');
+
+SELECT 'Database structure verified. No data was deleted.' AS status;

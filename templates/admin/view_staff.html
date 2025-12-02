@@ -1,38 +1,55 @@
 {% extends "base.html" %}
-
 {% block title %}View Staff{% endblock %}
 
 {% block content %}
-    <h2>All Staff Members</h2>
-    <div class="table-container">
-        <table>
-            <thead>
-                <tr>
-                    <th>Staff ID</th>
-                    <th>Name</th>
-                    <th>Username</th>
-                    <th>Branch</th>
-                    <th>Subject</th>
-                    <th>Contact No</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for member in staff %}
-                <tr>
-                    <td>{{ member.staff_id }}</td>
-                    <td>{{ member.name }}</td>
-                    <td>{{ member.username }}</td>
-                    <td>{{ member.branch }}</td>
-                    <td>{{ member.subject }}</td>
-                    <td>{{ member.contact_no }}</td>
-                </tr>
-                {% else %}
-                <tr>
-                    <td colspan="6">No staff members found. Add staff from the dashboard.</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-    <a href="{{ url_for('admin.dashboard') }}" class="btn" style="margin-top: 20px;">Back to Dashboard</a>
+
+<h2>All Staff Members</h2>
+
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Staff ID</th>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Branch</th>
+                <th>Contact No</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for member in staff %}
+            <tr>
+                <td>{{ member.staff_id }}</td>
+                <td>{{ member.name }}</td>
+                <td>{{ member.username }}</td>
+                <td>{{ member.branch }}</td>
+                <td>{{ member.contact_no }}</td>
+                <td style="display: flex; gap: 5px;">
+                    <!-- Edit Button -->
+                    <a href="{{ url_for('admin.edit_staff', staff_id=member.staff_id) }}" class="btn"
+                        style="padding: 5px 10px; font-size: 0.8rem; text-decoration: none;">Edit</a>
+
+                    <!-- Delete Button (Form is safer for database changes) -->
+                    <form action="{{ url_for('admin.delete_staff', staff_id=member.staff_id) }}" method="POST"
+                        style="margin: 0;">
+                        <button type="submit"
+                            onclick="return confirm('Are you sure you want to remove {{ member.name }}? All attendance records taken by this staff will also be deleted. This cannot be undone.');"
+                            style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; border-radius: 4px;">
+                            Delete
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% else %}
+            <tr>
+                <td colspan="6" style="text-align: center;">No staff members found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<a href="{{ url_for('admin.dashboard') }}" class="btn" style="margin-top: 20px;">Back to Dashboard</a>
+
 {% endblock %}

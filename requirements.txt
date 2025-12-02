@@ -1,7 +1,9 @@
 Flask==2.2.2
 Flask-SQLAlchemy==2.5.1
+SQLAlchemy==1.4.46
+Werkzeug==2.3.8
 Flask-Login==0.6.2
 PyMySQL==1.0.2
 python-dotenv==0.21.0
-twilio==7.16.0
-werkzeug==2.2.2
+requests==2.31.0
+cryptography==41.0.5  #<-- ADD THIS LINE (version might differ slightly)

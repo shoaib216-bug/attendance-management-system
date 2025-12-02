@@ -1,38 +1,54 @@
-# =========================================================================
-# === THIS IS THE SIMULATED SMS SERVICE ===
-# It does NOT connect to any external API. It just prints to the terminal.
-# This is 100% reliable for demonstrations and debugging.
-# =========================================================================
+from flask import current_app
+from twilio.rest import Client
 
+def _send_twilio_sms(to_number, message_body):
+    """A unified internal function to send any SMS message using the Twilio API."""
+    try:
+        account_sid = current_app.config.get('TWILIO_ACCOUNT_SID')
+        auth_token = current_app.config.get('TWILIO_AUTH_TOKEN')
+        twilio_number = current_app.config.get('TWILIO_PHONE_NUMBER')
+        
+        if not all([account_sid, auth_token, twilio_number]):
+            print("!!! TWILIO ERROR: Credentials are not configured in .env file. !!!")
+            return False
+
+        if not to_number.startswith('+'):
+            to_number = f'+91{to_number}'
+
+        client = Client(account_sid, auth_token)
+        
+        message = client.messages.create(
+            body=message_body,
+            from_=twilio_number,
+            to=to_number
+        )
+        
+        print(f"--- Twilio SMS initiated to {to_number}: SID {message.sid} ---")
+        return True
+        
+    except Exception as e:
+        print(f"!!! TWILIO SMS FAILED. Error: {e} !!!")
+        return False
+
+# =========================================================================
+# === THIS IS THE MISSING FUNCTION FOR OTPs ===
+# =========================================================================
 def send_otp_sms(to_number, otp):
-    """
-    SIMULATED SMS: This function does not send a real SMS.
-    It prints the OTP to the console for development and presentation.
-    """
-    print("\n" + "="*50)
-    print("=== SMS SIMULATOR (OTP) ===")
-    print(f"      To: {to_number}")
-    print(f"     OTP: {otp}")
-    print("="*50 + "\n")
-    
-    # We always return True so the application thinks the SMS was "sent".
-    return True
+    """Formats and sends an OTP message via Twilio."""
+    print(f"--- Attempting to send OTP to {to_number} via Twilio ---")
+    message = f"Your OTP for Attendance Management is: {otp}. It is valid for 10 minutes."
+    return _send_twilio_sms(to_number, message)
+# =========================================================================
 
-
-def send_absent_notification_sms(to_number, student_name, date_str, period):
-    """
-    SIMULATED SMS: This function does not send a real SMS.
-    It prints the absentee notification to the console.
-    """
+# =========================================================================
+# === THIS IS THE FUNCTION FOR ABSENTEE NOTIFICATIONS ===
+# =========================================================================
+def send_absent_notification_sms(to_number, student_name, date_str, period, subject, time_str):
+    """Formats and sends a custom absentee notification via Twilio."""
+    print(f"--- Attempting to send ABSENT notification to {to_number} via Twilio ---")
     message = (
-        f"Dear Parent, your ward, {student_name}, was marked ABSENT "
-        f"for period {period} on {date_str}."
+        f"Attendance Alert: Your ward, {student_name}, was marked ABSENT "
+        f"for period {period} ({subject}) on {date_str} at {time_str}. "
+        f"- Attendance Mgmt"
     )
-    print("\n" + "="*50)
-    print("=== SMS SIMULATOR (Absent Notification) ===")
-    print(f"      To: {to_number}")
-    print(f" Message: {message}")
-    print("="*50 + "\n")
-    
-    # We always return True so the application thinks the SMS was "sent".
-    return True
+    return _send_twilio_sms(to_number, message)

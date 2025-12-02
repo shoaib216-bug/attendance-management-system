@@ -1,0 +1,19 @@
+import os
+
+wifi_name = "Your_WiFi_Name"
+wifi_password = "Your_WiFi_Password"
+config = f"""
+country=IN
+ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+update_config=1
+
+network={{
+    ssid="{wifi_name}"
+    psk="{wifi_password}"
+}}
+"""
+
+with open("/etc/wpa_supplicant/wpa_supplicant.conf", "w") as file:
+    file.write(config)
+os.system("sudo wpa_cli -i wlan0 reconfigure")
+print("Wi-Fi Connected (Reconfigured)")

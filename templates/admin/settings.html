@@ -10,6 +10,16 @@
         <hr style="margin-bottom: 1.5rem;">
         
         <form method="POST">
+            <!-- In settings.html, inside the <form> -->
+<hr style="margin: 2rem 0;">
+<h3>Feature Toggles</h3>
+<div class="form-group">
+    <label for="geolocation_enabled">Enable Geolocation Lock for Attendance?</label>
+    <select id="geolocation_enabled" name="geolocation_enabled" class="form-control">
+        <option value="true" {% if settings.geolocation_enabled == 'true' %}selected{% endif %}>Yes, Enforce Location Check</option>
+        <option value="false" {% if settings.geolocation_enabled == 'false' %}selected{% endif %}>No, Disable Location Check</option>
+    </select>
+</div>
             <div class="form-group">
                 <label for="latitude">College Latitude</label>
                 <input type="text" id="latitude" name="latitude" value="{{ settings.college_latitude }}" required>

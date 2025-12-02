@@ -1,15 +1,34 @@
 import os
+from datetime import timedelta
 from flask import Flask, redirect, url_for
 from flask_login import LoginManager
 from config import Config
-from models.models import db, Admin, Staff # Only import users who can log in
+from models.models import db, Admin, Staff 
 from routes.auth_routes import auth_bp
 from routes.admin_routes import admin_bp
 from routes.staff_routes import staff_bp
-from routes.public_routes import public_bp # Import the new public blueprint
+from routes.public_routes import public_bp 
 
 app = Flask(__name__)
 app.config.from_object(Config)
+
+# =========================================================
+# === NEW: SESSION EXPIRATION CONFIGURATION ===
+# This sets the session to expire after 15 days.
+# Users will need to login roughly twice a month.
+# =========================================================
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=15)
+
+# =========================================================================
+# === CACHE CONTROL HEADERS ===
+# =========================================================================
+@app.after_request
+def add_header(response):
+    response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate, post-check=0, pre-check=0'
+    response.headers['Pragma'] = 'no-cache'
+    response.headers['Expires'] = '0'
+    return response
+
 db.init_app(app)
 
 login_manager = LoginManager()
@@ -18,7 +37,6 @@ login_manager.login_view = 'auth.admin_login'
 
 @app.context_processor
 def inject_user_types():
-    # Only Admin and Staff are loginable user types now
     return dict(isinstance=isinstance, Admin=Admin, Staff=Staff)
 
 @login_manager.user_loader
@@ -32,15 +50,14 @@ def load_user(user_id_string):
     elif user_type == 'staff': return Staff.query.get(user_id)
     return None
 
-# Register only the blueprints we are using
+# Register blueprints
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(staff_bp, url_prefix='/staff')
-app.register_blueprint(public_bp, url_prefix='/view') # The public view pages
+app.register_blueprint(public_bp, url_prefix='/view') 
 
 @app.route('/')
 def index():
-    # The "Register First" logic is still useful for initial setup
     with app.app_context():
         if Admin.query.first() is None:
             return redirect(url_for('auth.register_admin'))

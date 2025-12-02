@@ -1,21 +1,52 @@
 {% extends "base.html" %}
-
 {% block title %}View Students{% endblock %}
 
 {% block content %}
 <h2>All Students</h2>
 
-<!-- Search Form -->
+<!-- Filter Form -->
 <div class="form-container" style="max-width: none; margin: 0 0 2rem 0; padding: 1.5rem;">
     <form method="GET" action="{{ url_for('admin.view_students') }}">
-        <div class="form-group" style="margin-bottom: 0;">
-            <label for="search_query">Search by Name or Roll Number</label>
-            <input type="text" id="search_query" name="q" placeholder="Enter search term..."
-                value="{{ search_query or '' }}">
+        <div
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; align-items: flex-end;">
+            <!-- Text Search -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="search_query">Search by Name or Roll No</label>
+                <input type="text" id="search_query" name="q" placeholder="Enter search term..."
+                    value="{{ search_query or '' }}">
+            </div>
+            <!-- Branch Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="branch_filter">Filter by Branch</label>
+                <select id="branch_filter" name="branch" class="form-control">
+                    <option value="">All Branches</option>
+                    {% if available_branches %}
+                    {% for branch in available_branches %}
+                    <option value="{{ branch }}" {% if branch==selected_branch %}selected{% endif %}>{{ branch }}
+                    </option>
+                    {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
+            <!-- Semester Filter -->
+            <div class="form-group" style="margin-bottom: 0;">
+                <label for="semester_filter">Filter by Semester</label>
+                <select id="semester_filter" name="semester" class="form-control">
+                    <option value="">All Semesters</option>
+                    {% if available_semesters %}
+                    {% for semester in available_semesters %}
+                    <option value="{{ semester }}" {% if semester|string==selected_semester|string %}selected{% endif
+                        %}>Semester {{ semester }}</option>
+                    {% endfor %}
+                    {% endif %}
+                </select>
+            </div>
         </div>
-        <button type="submit" class="btn" style="margin-top: 1rem;">Search</button>
-        <a href="{{ url_for('admin.view_students') }}" class="btn"
-            style="background-color: #6c757d; margin-top: 1rem;">Clear</a>
+        <div style="margin-top: 1rem;">
+            <button type="submit" class="btn btn-primary">Filter / Search</button>
+            <a href="{{ url_for('admin.view_students') }}" class="btn btn-secondary"
+                style="background-color: #6c757d;">Clear Filters</a>
+        </div>
     </form>
 </div>
 
@@ -30,46 +61,60 @@
                 <th>Branch</th>
                 <th>Semester</th>
                 <th>Parent Contact</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
-            <!-- ========================================================================= -->
-            <!-- === THIS IS THE CORRECTED LOOP STRUCTURE === -->
-            <!-- ========================================================================= -->
             {% for student in students %}
             <tr>
                 <td>{{ student.student_id }}</td>
-                <td>
-                    <!-- This is the new clickable link -->
-                    <a href="{{ url_for('admin.student_details', student_id=student.student_id) }}">
-                        {{ student.name }}
-                    </a>
-                </td>
-                <td>
-                                        <a href="{{ url_for('admin.student_details', student_id=student.student_id) }}">
-{{ student.roll_no }}</td>
+                <td><a href="{{ url_for('admin.student_details', student_id=student.student_id) }}">{{ student.name
+                        }}</a></td>
+                <td>{{ student.roll_no }}</td>
                 <td>{{ student.branch }}</td>
                 <td>{{ student.semester }}</td>
-                <!-- This now displays the correct field -->
                 <td>{{ student.parent_contact }}</td>
-            </tr>
-            {% else %}
-            <!-- This 'else' part runs if the 'students' list is empty -->
-            <tr>
-                <td colspan="6" style="text-align: center;">
-                    {% if search_query %}
-                    No students found matching your search for "{{ search_query }}".
-                    {% else %}
-                    No students have been added to the system yet.
-                    {% endif %}
+
+                <!-- Actions Column -->
+                <td style="display: flex; gap: 5px;">
+                    <!-- Edit Button -->
+                    <a href="{{ url_for('admin.edit_student', student_id=student.student_id) }}" class="btn"
+                        style="padding: 5px 10px; font-size: 0.8rem; text-decoration: none;">Edit</a>
+
+                    <!-- Delete Individual Student Button -->
+                    <form action="{{ url_for('admin.delete_student', student_id=student.student_id) }}" method="POST"
+                        style="margin:0;">
+                        <button type="submit"
+                            onclick="return confirm('Are you sure you want to delete {{ student.name }}? This removes their attendance history as well.');"
+                            style="background-color: #dc3545; color: white; border: none; padding: 5px 10px; font-size: 0.8rem; cursor: pointer; border-radius: 4px;">
+                            Delete
+                        </button>
+                    </form>
                 </td>
             </tr>
-            {% endfor %} <!-- THE for LOOP MUST END HERE -->
-            <!-- ========================================================================= -->
+            {% else %}
+            <tr>
+                <td colspan="7" style="text-align: center;">
+                    {% if search_query %}No students found.{% else %}No students added yet.{% endif %}
+                </td>
+            </tr>
+            {% endfor %}
         </tbody>
     </table>
 </div>
 
-<a href="{{ url_for('admin.dashboard') }}" class="btn" style="margin-top: 20px;">Back to Dashboard</a>
+<!-- Bottom Actions Area -->
+<div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+    <a href="{{ url_for('admin.dashboard') }}" class="btn">Back to Dashboard</a>
 
-{% endblock %} <!-- THE main content BLOCK ENDS HERE -->
+    <!-- Delete ALL Students Button -->
+    <form action="{{ url_for('admin.delete_all_students') }}" method="POST" style="margin: 0;">
+        <button type="submit"
+            onclick="return confirm('⚠️ DANGER: Are you sure you want to DELETE ALL STUDENTS?\n\nThis will wipe the entire student database and all attendance records.\nThis action cannot be undone!');"
+            style="background-color: #8b0000; color: white; border: none; padding: 10px 20px; font-size: 0.9rem; cursor: pointer; border-radius: 4px;">
+            Delete All Students
+        </button>
+    </form>
+</div>
+
+{% endblock %}
