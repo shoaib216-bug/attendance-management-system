@@ -13,9 +13,7 @@ app = Flask(__name__)
 app.config.from_object(Config)
 
 # =========================================================
-# === NEW: SESSION EXPIRATION CONFIGURATION ===
-# This sets the session to expire after 15 days.
-# Users will need to login roughly twice a month.
+# === SESSION EXPIRATION CONFIGURATION ===
 # =========================================================
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=15)
 
@@ -45,9 +43,13 @@ def load_user(user_id_string):
     try:
         user_type, user_id = user_id_string.split('-')
         user_id = int(user_id)
-    except (ValueError, AttributeError): return None
-    if user_type == 'admin': return Admin.query.get(user_id)
-    elif user_type == 'staff': return Staff.query.get(user_id)
+    except (ValueError, AttributeError):
+        return None
+
+    if user_type == 'admin':
+        return Admin.query.get(user_id)
+    elif user_type == 'staff':
+        return Staff.query.get(user_id)
     return None
 
 # Register blueprints
@@ -64,5 +66,16 @@ def index():
         else:
             return redirect(url_for('auth.admin_login'))
 
-if __name__ == '__main__':
-    app.run(debug=True)
+# ================================
+# === Render Health Check Route ===
+# ================================
+@app.route('/healthz')
+def health_check():
+    return "OK", 200
+
+# ================================
+# === Render Production Server ===
+# ================================
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
