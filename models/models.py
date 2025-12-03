@@ -17,7 +17,6 @@ class Staff(UserMixin, db.Model):
     username=db.Column(db.String(50), unique=True, nullable=False)
     password=db.Column(db.String(255), nullable=False)
     branch=db.Column(db.String(50))
-    # I REMOVED THE SUBJECT LINE HERE
     contact_no=db.Column(db.String(15))
 
     def get_id(self): return f'staff-{self.staff_id}'
@@ -28,11 +27,20 @@ class Student(db.Model):
     student_id=db.Column(db.Integer, primary_key=True); name=db.Column(db.String(100), nullable=False); roll_no=db.Column(db.String(20), unique=True, nullable=False); branch=db.Column(db.String(50)); semester=db.Column(db.Integer); parent_contact=db.Column(db.String(15), nullable=False)
 
 class Attendance(db.Model):
-    id=db.Column(db.Integer, primary_key=True); staff_id=db.Column(db.Integer, db.ForeignKey('staff.staff_id')); student_id=db.Column(db.Integer, db.ForeignKey('student.student_id')); date=db.Column(db.Date, nullable=False); period=db.Column(db.Integer, nullable=False);subject = db.Column(db.String(100), nullable=False); status=db.Column(db.Enum('Present', 'Absent'), nullable=False); timestamp=db.Column(db.DateTime, default=datetime.utcnow); student=db.relationship('Student', backref='attendances'); staff=db.relationship('Staff', backref='attendances')
+    id=db.Column(db.Integer, primary_key=True)
+    staff_id=db.Column(db.Integer, db.ForeignKey('staff.staff_id'))
+    student_id=db.Column(db.Integer, db.ForeignKey('student.student_id'))
+    date=db.Column(db.Date, nullable=False)
+    period=db.Column(db.Integer, nullable=False)
+    subject = db.Column(db.String(100), nullable=False)
+    
+    #FIXED LINE BELOW: Added name='attendance_status' for PostgreSQL compatibility
+    status=db.Column(db.Enum('Present', 'Absent', name='attendance_status'), nullable=False)
+    
+    timestamp=db.Column(db.DateTime, default=datetime.utcnow)
+    student=db.relationship('Student', backref='attendances')
+    staff=db.relationship('Staff', backref='attendances')
 
-# =========================================================================
-# === THESE ARE THE MISSING MODELS THAT CAUSED THE CRASH ===
-# =========================================================================
 class Semester(db.Model):
     __tablename__='semesters'
     id = db.Column(db.Integer, primary_key=True)
@@ -47,4 +55,3 @@ class Setting(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     setting_key = db.Column(db.String(50), unique=True, nullable=False)
     setting_value = db.Column(db.String(255))
-# =========================================================================
