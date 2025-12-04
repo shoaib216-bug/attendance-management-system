@@ -1,73 +1,25 @@
-<!DOCTYPE html>
-<html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Attendance Management{% endblock %}</title>
+
+    <!-- ================================================================= -->
+    <!-- === SEO SETTINGS: THIS HELPS GOOGLE FIND YOU === -->
+    <!-- ================================================================= -->
+    <title>Attendance Management System - Official Portal</title>
+
+    <!-- The Description: This is the text shown under the link in Google -->
+    <meta name="description"
+        content="Official Attendance Management System. Login for Admins, Staff, Students, and Parents to track and view daily attendance records.">
+
+    <!-- Keywords: Words people might type to find you -->
+    <meta name="keywords"
+        content="Attendance Management, Student Attendance, College System, Online Attendance, Staff Login">
+
+    <!-- Robot Instructions: Tells Google "Yes, please scan my site" -->
+    <meta name="robots" content="index, follow">
+    <!-- ================================================================= -->
+     <meta name="google-site-verification" content="glaCwdBs6lMdNStSoH_-_a45dVRoR9PhcApiIq8PFKQ" />
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-
-<body style="background-color: ;">
-    <nav class="navbar">
-        <div class="container">
-            <a href="{{ url_for('index') }}" class="navbar-brand">Attendance Management</a>
-
-            <!-- ========================================================================= -->
-            <!-- === THIS IS THE CORRECTED NAVIGATION LOGIC === -->
-            <!-- ========================================================================= -->
-            <div class="navbar-links">
-                {% if current_user and current_user.is_authenticated %}
-                <!-- This block ONLY shows when a user is truly logged in -->
-                {% if isinstance(current_user, Admin) %}
-                <a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>
-                {% elif isinstance(current_user, Staff) %}
-                <a href="{{ url_for('staff.dashboard') }}">Staff Dashboard</a>
-                {% endif %}
-                <a href="{{ url_for('auth.logout') }}">Logout</a>
-                {% else %}
-                <!-- This block shows when NO ONE is logged in -->
-                <a href="{{ url_for('public.view_student_attendance') }}">Student View</a>
-                <a href="{{ url_for('public.view_parent_attendance') }}">Parent View</a>
-                <a href="{{ url_for('auth.staff_login') }}">Staff Login</a>
-                <a href="{{ url_for('auth.admin_login') }}">Admin Login</a>
-                {% endif %}
-            </div>
-            <!-- ========================================================================= -->
-
-        </div>
-    </nav>
-    <main class="container">
-        {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
-        {% endfor %}
-        {% endif %}
-        {% endwith %}
-        {% block content %}{% endblock %}
-    </main>
-    <footer class="footer">
-        <p>&copy; 2025 Attendance Management System</p>
-    </footer>
-    <script>
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId); if (!field) return;
-            const icon = document.querySelector(`[onclick="togglePassword('${fieldId}')"]`);
-            if (field.type === "password") {
-                field.type = "text"; icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash');
-            } else {
-                field.type = "password"; icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye');
-            }
-        }
-        function filterInput(element, pattern) {
-            // This function takes an input element and a regex pattern.
-            // It replaces any characters that do NOT match the pattern with an empty string.
-            element.value = element.value.replace(pattern, '');
-        }
-
-    </script>
-</body>
-
-</html>
