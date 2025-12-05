@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+{% block title %}Student Details - {{ student.name }}{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+    /* Compact Card Styles */
+    .detail-card {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        height: 100%;
+        border: 1px solid #eee;
+    }
+
+    /* Profile Section */
+    .profile-avatar {
+        width: 70px;
+        height: 70px;
+        background: #f0f4f8;
+        color: #0d6efd;
+        border-radius: 50%;
+        font-size: 1.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 20px;
+    }
+
+    .info-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        color: #888;
+        font-weight: 600;
+        margin-bottom: 2px;
+    }
+
+    .info-value {
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    /* Circular Graph Container */
+    .chart-container {
+        position: relative;
+        height: 180px;
+        width: 180px;
+        margin: 0 auto;
+    }
+
+    .chart-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+    }
+
+    .chart-percentage {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: #333;
+        line-height: 1;
+    }
+
+    .chart-label {
+        font-size: 0.8rem;
+        color: #777;
+    }
+
+    /* Table Styles */
+    .table-container {
+        max-height: 400px;
+        overflow-y: auto;
+        border-radius: 8px;
+        border: 1px solid #eee;
+    }
+
+    .table th {
+        position: sticky;
+        top: 0;
+        background: #f8f9fa;
+        z-index: 1;
+    }
+</style>
+
+<div class="container mt-3">
+    <!-- Header with Back Button -->
+    <div class="d-flex align-items-center mb-3">
+        <a href="{{ url_for('hod.dashboard') }}" class="btn btn-sm btn-outline-secondary me-3">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+        <h4 class="fw-bold mb-0 text-dark">Student Profile</h4>
+    </div>
+
+    <!-- Top Row: Info & Graph -->
+    <div class="row g-3 mb-3">
+
+        <!-- LEFT: Student Personal Info -->
+        <div class="col-lg-8">
+            <div class="detail-card d-flex flex-column justify-content-center">
+                <div class="d-flex align-items-center mb-4 border-bottom pb-3">
+                    <div class="profile-avatar">
+                        {{ student.name[:1] }}
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0">{{ student.name }}</h3>
+                        <span class="badge bg-primary rounded-pill px-3">Roll No: {{ student.roll_no }}</span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-label">Department</div>
+                        <div class="info-value">{{ student.branch }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-label">Semester</div>
+                        <div class="info-value">
+                            {% if student.semester %}
+                            Semester {{ student.semester }}
+                            {% else %}
+                            <span class="text-danger">Alumni / Graduated</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-label">Parent Contact</div>
+                        <div class="info-value">{{ student.parent_contact }}</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-label">Email</div>
+                        <div class="info-value text-truncate">student@example.com</div>
+                        <!-- Replace if you have email field -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Circular Attendance Graph -->
+        <div class="col-lg-4">
+            <div class="detail-card text-center">
+                <h6 class="text-muted mb-3 fw-bold">ATTENDANCE OVERVIEW</h6>
+
+                <div class="chart-container">
+                    <canvas id="attendanceChart"></canvas>
+                    <div class="chart-text">
+                        <div class="chart-percentage" id="percentageText">{{ percentage }}%</div>
+                        <div class="chart-label">Present</div>
+                    </div>
+                </div>
+
+                <div class="row mt-3 text-center">
+                    <div class="col-6 border-end">
+                        <small class="text-muted d-block">Total Classes</small>
+                        <span class="fw-bold">{{ total }}</span>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted d-block">Days Present</small>
+                        <span class="fw-bold text-success">{{ present }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Row: History Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="detail-card p-0 overflow-hidden">
+                <div class="p-3 bg-light border-bottom">
+                    <h6 class="fw-bold mb-0">Detailed Attendance History</h6>
+                </div>
+                <div class="table-container">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th class="ps-4">Date</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendance %}
+                            <tr>
+                                <td class="ps-4">{{ record.date }}</td>
+                                <td>{{ record.subject }}</td>
+                                <td>
+                                    {% if record.status == 'Present' %}
+                                    <span class="badge bg-success bg-opacity-10 text-success px-3">Present</span>
+                                    {% else %}
+                                    <span class="badge bg-danger bg-opacity-10 text-danger px-3">Absent</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="3" class="text-center py-4 text-muted">No attendance records found.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="height: 50px;"></div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const ctx = document.getElementById('attendanceChart').getContext('2d');
+
+        // --- SAFE SYNTAX FOR FLASK VARIABLES ---
+        const percentage = {{ percentage }
+    };
+    const remaining = 100 - percentage;
+
+    // Determine Color based on percentage
+    let color = '#0d6efd'; // Blue (Good)
+    if (percentage < 75) { color = '#dc3545'; } // Red (Danger)
+    else if (percentage < 85) { color = '#ffc107'; } // Yellow (Warning)
+
+    // Update text color
+    document.getElementById('percentageText').style.color = color;
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: [percentage, remaining],
+                backgroundColor: [
+                    color,
+                    '#e9ecef' // Grey for empty part
+                ],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '75%', // Makes it look like a ring
+            plugins: {
+                legend: { display: false },
+                tooltip: { enabled: false }
+            }
+        }
+    });
+    });
+</script>
+{% endblock %}

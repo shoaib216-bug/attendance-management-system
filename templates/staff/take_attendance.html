@@ -10,26 +10,23 @@
             <label for="branch">Branch</label>
             <select id="branch" name="branch" required>
                 {% if branches %}
-                    {% for branch in branches %}
-                    <option value="{{ branch }}">{{ branch }}</option>
-                    {% endfor %}
+                {% for branch in branches %}
+                <option value="{{ branch }}">{{ branch }}</option>
+                {% endfor %}
                 {% else %}
-                    <option disabled selected>No branches found</option>
+                <option disabled selected>No branches found</option>
                 {% endif %}
             </select>
         </div>
         <div class="form-group">
             <label for="semester">Semester</label>
+            <!-- UPDATED: Hardcoded 1-6 to ensure consistency -->
             <select id="semester" name="semester" required>
-                {% if semesters %}
-                    {% for semester in semesters %}
-                    <option value="{{ semester }}">{{ semester }}</option>
-                    {% endfor %}
-                {% else %}
-                    <option disabled selected>No semesters found</option>
-                {% endif %}
+                <option value="" disabled selected>Select Semester</option>
+                {% for i in range(1, 7) %}
+                <option value="{{ i }}">Semester {{ i }}</option>
+                {% endfor %}
             </select>
-
         </div>
         <div class="form-group">
             <label for="period">Period Number</label>
@@ -45,7 +42,7 @@
             </select>
         </div>
 
-        <button type="submit" class="btn" {% if not branches or not semesters %}disabled{% endif %}>Fetch Students</button>
+        <button type="submit" class="btn" {% if not branches %}disabled{% endif %}>Fetch Students</button>
     </form>
 </div>
 {% endblock %}

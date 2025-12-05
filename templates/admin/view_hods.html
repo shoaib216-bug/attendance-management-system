@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <style>
+        .name-link {
+            color: #0d6efd !important;
+            font-weight: bold;
+            text-decoration: none;
+            cursor: pointer !important;
+            display: inline-block;
+            padding: 5px 0;
+            transition: color 0.2s;
+        }
+
+        .name-link:hover {
+            color: #0a58ca !important;
+            text-decoration: underline !important;
+        }
+    </style>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Manage HODs</h2>
+        <a href="{{ url_for('admin.add_hod') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New HOD
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Username</th>
+                            <th>Department</th>
+                            <th>Contact No</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for hod in hods %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('admin.hod_details', hod_id=hod.hod_id) }}" class="name-link">
+                                    {{ hod.name }} <i class="fas fa-external-link-alt"
+                                        style="font-size: 12px; margin-left: 5px;"></i>
+                                </a>
+                            </td>
+                            <td>{{ hod.username }}</td>
+                            <td><span class="badge bg-info text-dark">{{ hod.department }}</span></td>
+                            <td>{{ hod.contact_no }}</td>
+                            <td>
+                                <!-- EDIT BUTTON (CHANGED TO BLUE/PRIMARY) -->
+                                <a href="{{ url_for('admin.edit_hod', hod_id=hod.hod_id) }}"
+                                    class="btn btn-sm btn-primary me-2">
+                                    Edit
+                                </a>
+
+                                <!-- DELETE BUTTON -->
+                                <form action="{{ url_for('admin.delete_hod', hod_id=hod.hod_id) }}" method="POST"
+                                    onsubmit="return confirm('Are you sure you want to delete this HOD?');"
+                                    style="display:inline;">
+                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted">No HODs found. Click "Add New HOD" to create
+                                one.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,21 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     <!-- ================================================================= -->
-    <!-- === SEO SETTINGS: THIS HELPS GOOGLE FIND YOU === -->
+    <!-- === SEO SETTINGS === -->
     <!-- ================================================================= -->
     <title>Attendance Management System - Official Portal</title>
-
-    <!-- The Description: This is the text shown under the link in Google -->
     <meta name="description"
-        content="Official Attendance Management System. Login for Admins, Staff, Students, and Parents to track and view daily attendance records.">
-
-    <!-- Keywords: Words people might type to find you -->
+        content="Official Attendance Management System. Login for Admins, Staff, HODs, Students, and Parents.">
     <meta name="keywords"
         content="Attendance Management, Student Attendance, College System, Online Attendance, Staff Login">
-
-    <!-- Robot Instructions: Tells Google "Yes, please scan my site" -->
     <meta name="robots" content="index, follow">
     <!-- ================================================================= -->
     <meta name="google-site-verification" content="glaCwdBs6lMdNStSoH_-_a45dVRoR9PhcApiIq8PFKQ" />
@@ -24,28 +21,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
 
-<body style="background-color: ;">
+<body>
     <nav class="navbar">
         <div class="container">
             <a href="{{ url_for('index') }}" class="navbar-brand">Attendance Management</a>
 
             <!-- ========================================================================= -->
-            <!-- === THIS IS THE CORRECTED NAVIGATION LOGIC === -->
+            <!-- === NAVIGATION LOGIC === -->
             <!-- ========================================================================= -->
             <div class="navbar-links">
                 {% if current_user and current_user.is_authenticated %}
                 <!-- This block ONLY shows when a user is truly logged in -->
+
                 {% if isinstance(current_user, Admin) %}
                 <a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>
+
                 {% elif isinstance(current_user, Staff) %}
                 <a href="{{ url_for('staff.dashboard') }}">Staff Dashboard</a>
+
+                <!-- NEW: HOD Dashboard Link -->
+                {% elif isinstance(current_user, HOD) %}
+                <a href="{{ url_for('hod.dashboard') }}">HOD Dashboard</a>
                 {% endif %}
+
                 <a href="{{ url_for('auth.logout') }}">Logout</a>
+
                 {% else %}
                 <!-- This block shows when NO ONE is logged in -->
                 <a href="{{ url_for('public.view_student_attendance') }}">Student View</a>
                 <a href="{{ url_for('public.view_parent_attendance') }}">Parent View</a>
+
                 <a href="{{ url_for('auth.staff_login') }}">Staff Login</a>
+                <a href="{{ url_for('auth.hod_login') }}">HOD Login</a> <!-- NEW LINK -->
                 <a href="{{ url_for('auth.admin_login') }}">Admin Login</a>
                 {% endif %}
             </div>
@@ -77,11 +84,8 @@
             }
         }
         function filterInput(element, pattern) {
-            // This function takes an input element and a regex pattern.
-            // It replaces any characters that do NOT match the pattern with an empty string.
             element.value = element.value.replace(pattern, '');
         }
-
     </script>
 </body>
 

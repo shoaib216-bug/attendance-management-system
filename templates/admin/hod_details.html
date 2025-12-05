@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+{% block title %}{{ hod.name }} - Details{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- CUSTOM CSS FOR BEAUTIFUL LAYOUT -->
+<style>
+    /* Card Styling */
+    .custom-card {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        padding: 25px;
+        margin-bottom: 30px;
+        border: 1px solid #eee;
+    }
+
+    /* Profile Icon */
+    .profile-icon-box {
+        width: 90px;
+        height: 90px;
+        background: #f0f4f8;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #0d6efd;
+        font-size: 2.5rem;
+        margin-bottom: 15px;
+    }
+
+    /* Search & Filter Section Styling */
+    .filter-container {
+        display: flex;
+        gap: 20px;
+        /* Space between search and select */
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        flex: 1;
+        /* Takes up remaining space */
+        min-width: 250px;
+    }
+
+    .filter-box {
+        flex: 0 0 250px;
+        /* Fixed width for dropdown */
+    }
+
+    /* Inputs Styling */
+    .styled-input,
+    .styled-select {
+        width: 100%;
+        padding: 12px 15px;
+        font-size: 1rem;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fcfcfc;
+        transition: all 0.3s ease;
+        box-sizing: border-box;
+    }
+
+    .styled-input:focus,
+    .styled-select:focus {
+        border-color: #0d6efd;
+        background-color: #fff;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.1);
+    }
+
+    /* Table Styling */
+    .table-container {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        /* Rounds corners of table */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        border: 1px solid #eee;
+    }
+
+    .table th {
+        background-color: #f8f9fa;
+        font-weight: 600;
+        color: #555;
+        padding: 15px;
+        border-bottom: 2px solid #eee;
+    }
+
+    .table td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+    /* Back Button */
+    .back-btn {
+        display: inline-flex;
+        align-items: center;
+        text-decoration: none;
+        color: #6c757d;
+        font-weight: 500;
+        margin-bottom: 20px;
+        transition: color 0.2s;
+    }
+
+    .back-btn:hover {
+        color: #0d6efd;
+    }
+</style>
+
+<div class="container mt-4">
+    <!-- Back Button -->
+    <a href="{{ url_for('admin.view_hods') }}" class="back-btn">
+        <i class="fas fa-arrow-left me-2"></i> Back to HOD List
+    </a>
+
+    <!-- TOP SECTION: Profile and Graph -->
+    <div class="row">
+        <!-- LEFT: HOD PROFILE -->
+        <div class="col-md-4">
+            <div class="custom-card h-100 text-center">
+                <div class="profile-icon-box">
+                    <i class="fas fa-user-tie"></i>
+                </div>
+                <h3 class="fw-bold text-dark">{{ hod.name }}</h3>
+                <p class="text-muted mb-2">Head of Department</p>
+                <span class="badge bg-primary px-3 py-2 mb-4" style="font-size: 0.9rem;">{{ hod.department }}</span>
+
+                <div class="text-start px-3 mt-2">
+                    <p class="mb-2"><strong><i class="fas fa-user me-2 text-secondary"></i> Username:</strong> {{
+                        hod.username }}</p>
+                    <p class="mb-0"><strong><i class="fas fa-phone me-2 text-secondary"></i> Contact:</strong> {{
+                        hod.contact_no }}</p>
+                </div>
+
+                <hr class="my-4" style="opacity: 0.1;">
+
+                <div class="row text-center">
+                    <div class="col-6 border-end">
+                        <h4 class="fw-bold text-primary mb-0">{{ staff_count }}</h4>
+                        <small class="text-muted">Staff</small>
+                    </div>
+                    <div class="col-6">
+                        <h4 class="fw-bold text-info mb-0">{{ student_count }}</h4>
+                        <small class="text-muted">Students</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: GRAPH -->
+        <div class="col-md-8">
+            <div class="custom-card h-100">
+                <h5 class="fw-bold mb-4 text-dark">Student Distribution (By Semester)</h5>
+                <div style="height: 300px;">
+                    {% if student_count > 0 %}
+                    <canvas id="semesterChart"></canvas>
+                    {% else %}
+                    <div class="d-flex align-items-center justify-content-center h-100 text-muted bg-light rounded">
+                        No students registered in this branch yet.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- === SEARCH & FILTER SECTION === -->
+    <div class="custom-card" style="padding: 20px;">
+        <h5 class="fw-bold mb-3 text-secondary"><i class="fas fa-search me-2"></i>Filter Students</h5>
+        <div class="filter-container">
+            <!-- Search Input -->
+            <div class="search-box">
+                <input type="text" id="searchInput" class="styled-input" placeholder="Search by Name or Roll Number..."
+                    onkeyup="filterTable()">
+            </div>
+            <!-- Dropdown -->
+            <div class="filter-box">
+                <select id="semFilter" class="styled-select" onchange="filterTable()">
+                    <option value="all">All Semesters</option>
+                    {% for i in range(1, 9) %}
+                    <option value="{{ i }}">Semester {{ i }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- === STUDENT TABLE === -->
+    <div class="table-container">
+        <table class="table mb-0" id="studentTable">
+            <thead>
+                <tr>
+                    <th>Roll No</th>
+                    <th>Name</th>
+                    <th>Semester</th>
+                    <th>Parent Contact</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for student in students %}
+                <tr class="student-row" data-sem="{{ student.semester }}">
+                    <td class="roll-no fw-bold text-dark">{{ student.roll_no }}</td>
+                    <td class="student-name">{{ student.name }}</td>
+                    <td><span class="badge bg-secondary">Sem {{ student.semester }}</span></td>
+                    <td>{{ student.parent_contact }}</td>
+                    <td>
+                        <a href="{{ url_for('admin.student_details', student_id=student.student_id) }}"
+                            class="btn btn-sm btn-outline-primary px-3">
+                            View
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="text-center py-5 text-muted">
+                        <i class="fas fa-user-graduate fa-2x mb-3 d-block text-secondary" style="opacity: 0.5;"></i>
+                        No students found in this department.
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Hidden "No Results" Message -->
+        <div id="noResults" class="text-center py-5 text-muted" style="display: none;">
+            <i class="fas fa-search fa-2x mb-3 d-block text-secondary" style="opacity: 0.5;"></i>
+            No matching students found.
+        </div>
+    </div>
+    <div style="height: 50px;"></div> <!-- Bottom Spacing -->
+</div>
+
+<!-- JAVASCRIPT LOGIC -->
+<script>
+    // 1. Graph Logic
+    const ctx = document.getElementById('semesterChart');
+    if (ctx) {
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ sem_labels | tojson }},
+    datasets: [{
+        label: 'Number of Students',
+        data: {{ sem_data | tojson }},
+        backgroundColor: '#0d6efd', // Solid Blue
+        borderRadius: 5,
+        barThickness: 40
+                }]
+            },
+    options: {
+        responsive: true,
+            maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 }, grid: { color: '#f0f0f0' } },
+            x: { grid: { display: false } }
+        }
+    }
+        });
+    }
+
+    // 2. Filter Logic
+    function filterTable() {
+        let input = document.getElementById("searchInput").value.toUpperCase();
+        let semFilter = document.getElementById("semFilter").value;
+
+        let rows = document.querySelectorAll(".student-row");
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            let name = row.querySelector(".student-name").innerText.toUpperCase();
+            let roll = row.querySelector(".roll-no").innerText.toUpperCase();
+            let sem = row.getAttribute("data-sem");
+
+            let matchesSearch = (name.indexOf(input) > -1) || (roll.indexOf(input) > -1);
+            let matchesSem = (semFilter === "all") || (sem === semFilter);
+
+            if (matchesSearch && matchesSem) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        document.getElementById("noResults").style.display = (visibleCount === 0) ? "block" : "none";
+    }
+</script>
+{% endblock %}

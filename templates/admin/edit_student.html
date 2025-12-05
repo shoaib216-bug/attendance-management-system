@@ -9,11 +9,11 @@
             <label for="name">Full Name</label>
             <input type="text" id="name" name="name" value="{{ student.name }}" required>
         </div>
-        
-        <!-- Roll No is usually read-only to prevent duplicates, but displayed for reference -->
+
         <div class="form-group">
             <label for="roll_no">Roll No (Cannot be changed)</label>
-            <input type="text" id="roll_no" name="roll_no" value="{{ student.roll_no }}" disabled style="background-color: #e9ecef;">
+            <input type="text" id="roll_no" name="roll_no" value="{{ student.roll_no }}" disabled
+                style="background-color: #e9ecef;">
         </div>
 
         <div class="form-group">
@@ -23,16 +23,26 @@
 
         <div class="form-group">
             <label for="semester">Semester</label>
-            <input type="number" id="semester" name="semester" value="{{ student.semester }}" min="1" max="8" required>
+            <!-- UPDATED: Changed to Select to handle 1-6 AND Alumni (None) -->
+            <select id="semester" name="semester" required
+                style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                {% for i in range(1, 7) %}
+                <option value="{{ i }}" {% if student.semester==i %}selected{% endif %}>Semester {{ i }}</option>
+                {% endfor %}
+                <option value="" {% if student.semester is none %}selected{% endif %}
+                    style="color: red; font-weight: bold;">Alumni / Graduated</option>
+            </select>
         </div>
 
         <div class="form-group">
             <label for="parent_contact">Parent's Mobile Number</label>
-            <input type="tel" id="parent_contact" name="parent_contact" value="{{ student.parent_contact }}" oninput="filterInput(this, /[^0-9]/g)" maxlength="10" required>
+            <input type="tel" id="parent_contact" name="parent_contact" value="{{ student.parent_contact }}"
+                oninput="filterInput(this, /[^0-9]/g)" maxlength="10" required>
         </div>
 
         <button type="submit" class="btn">Update Student</button>
-        <a href="{{ url_for('admin.view_students') }}" class="btn" style="background-color: #6c757d; margin-left: 10px;">Cancel</a>
+        <a href="{{ url_for('admin.view_students') }}" class="btn"
+            style="background-color: #6c757d; margin-left: 10px;">Cancel</a>
     </form>
 </div>
 {% endblock %}

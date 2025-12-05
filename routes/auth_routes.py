@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session
 from flask_login import login_user, logout_user, login_required, current_user
-from models.models import db, Admin, Staff
+# 1. UPDATE: Imported HOD
+from models.models import db, Admin, Staff, HOD
 import random
 from datetime import datetime, timedelta
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -24,8 +25,6 @@ def register_admin():
     admin_exists = Admin.query.first() is not None
 
     # 4. STRICT SECURITY CHECK
-    # If admins exist AND the key provided is WRONG or MISSING...
-    # Then we BLOCK access and send them to the login page.
     if admin_exists and provided_key != MY_SECRET_KEY:
         flash('Access Denied. Registration is restricted.', 'danger')
         return redirect(url_for('auth.admin_login'))
@@ -74,7 +73,6 @@ def admin_login():
         admin = Admin.query.filter_by(username=username).first()
         
         if admin and admin.check_password(password):
-            # Set session to be permanent and expire in 15 days
             session.permanent = True
             login_user(admin, remember=True, duration=timedelta(days=15))
             return redirect(url_for('admin.dashboard'))
@@ -98,7 +96,6 @@ def staff_login():
         staff = Staff.query.filter_by(username=username).first()
         
         if staff and staff.check_password(password):
-            # Set session to be permanent and expire in 15 days
             session.permanent = True
             login_user(staff, remember=True, duration=timedelta(days=15))
             return redirect(url_for('staff.dashboard'))
@@ -107,15 +104,41 @@ def staff_login():
         
     return render_template('auth/staff_login.html')
 
+# =========================================================
+# === 2. UPDATE: NEW HOD LOGIN ROUTE ===
+# =========================================================
+@auth_bp.route('/hod/login', methods=['GET', 'POST'])
+def hod_login():
+    if current_user.is_authenticated:
+        if isinstance(current_user, HOD):
+            return redirect(url_for('hod.dashboard'))
+        logout_user()
+        flash('Logged out of previous session.', 'info')
+
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        hod = HOD.query.filter_by(username=username).first()
+        
+        if hod and hod.check_password(password):
+            session.permanent = True
+            login_user(hod, remember=True, duration=timedelta(days=15))
+            return redirect(url_for('hod.dashboard'))
+            
+        flash('Invalid HOD username or password.', 'danger')
+        
+    return render_template('auth/hod_login.html')
+
+
 @auth_bp.route('/logout')
 @login_required
 def logout():
     logout_user()
-    session.permanent = False # Clear permanent status
+    session.permanent = False 
     flash('You have been logged out.', 'info')
     return redirect(url_for('auth.admin_login'))
 
-# --- Forgot Password (ADMIN & STAFF ONLY) ---
+# --- Forgot Password (ADMIN, STAFF & HOD) ---
 @auth_bp.route('/forgot-password', methods=['GET', 'POST'])
 def forgot_password():
     if request.method == 'POST':
@@ -138,6 +161,12 @@ def forgot_password():
             user = Staff.query.filter_by(username=identifier).first()
             if user:
                 phone_number = user.contact_no
+
+        # 3. UPDATE: Handle HOD Logic
+        elif user_type == 'hod':
+            user = HOD.query.filter_by(username=identifier).first()
+            if user:
+                phone_number = user.contact_no
         
         # If User Found & Phone Exists -> Send OTP
         if user and phone_number:
@@ -153,7 +182,7 @@ def forgot_password():
             session['reset_user_identifier'] = identifier
             return redirect(url_for('auth.verify_otp'))
         else:
-            flash('User not found.', 'danger')
+            flash('User not found or contact number missing.', 'danger')
 
     return render_template('auth/forgot_password.html')
 
@@ -173,6 +202,9 @@ def verify_otp():
             user = Admin.query.filter_by(username=identifier).first()
         elif user_type == 'staff':
             user = Staff.query.filter_by(username=identifier).first()
+        # 4. UPDATE: Handle HOD OTP
+        elif user_type == 'hod':
+            user = HOD.query.filter_by(username=identifier).first()
             
         if user and user.otp_hash and user.otp_expiry > datetime.utcnow():
             if check_password_hash(user.otp_hash, otp_from_user):
@@ -207,6 +239,9 @@ def reset_password():
             user = Admin.query.filter_by(username=identifier).first()
         elif user_type == 'staff':
             user = Staff.query.filter_by(username=identifier).first()
+        # 5. UPDATE: Handle HOD Reset
+        elif user_type == 'hod':
+            user = HOD.query.filter_by(username=identifier).first()
             
         if user:
             user.set_password(new_password)

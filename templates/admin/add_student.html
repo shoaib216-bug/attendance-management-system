@@ -18,12 +18,20 @@
         </div>
         <div class="form-group">
             <label for="semester">Semester</label>
-            <input type="number" id="semester" name="semester" value="{{ form_data.semester if form_data }}" min="1" max="8" required>
+            <!-- UPDATED: Changed to Select (1-6) -->
+            <select id="semester" name="semester" required
+                style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+                <option value="" disabled selected>Select Semester</option>
+                {% for i in range(1, 7) %}
+                <option value="{{ i }}">Semester {{ i }}</option>
+                {% endfor %}
+            </select>
         </div>
         <div class="form-group">
             <label for="parent_contact">Parent's Mobile Number (for SMS)</label>
-<input type="tel" id="parent_contact" name="parent_contact" oninput="filterInput(this, /[^0-9]/g)" maxlength="10" required>
-       </div>
+            <input type="tel" id="parent_contact" name="parent_contact" oninput="filterInput(this, /[^0-9]/g)"
+                maxlength="10" required>
+        </div>
         <button type="submit" class="btn">Add Student</button>
     </form>
 </div>

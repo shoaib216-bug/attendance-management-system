@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Staff Details - {{ staff.name }}{% endblock %}
+
+{% block content %}
+<style>
+    .detail-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        margin-bottom: 25px;
+        border: 1px solid #eee;
+    }
+
+    .profile-header {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+
+    .staff-avatar-lg {
+        width: 80px;
+        height: 80px;
+        background-color: #d1e7dd;
+        color: #0f5132;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: bold;
+    }
+
+    .info-label {
+        font-size: 0.8rem;
+        color: #777;
+        text-transform: uppercase;
+        font-weight: 600;
+    }
+
+    .info-value {
+        font-size: 1rem;
+        font-weight: 500;
+        color: #333;
+        margin-bottom: 10px;
+    }
+
+    /* Table Styles */
+    .clean-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .clean-table th {
+        background-color: #f8f9fa;
+        padding: 12px;
+        border-bottom: 2px solid #eee;
+        color: #555;
+        text-align: left;
+    }
+
+    .clean-table td {
+        padding: 12px;
+        border-bottom: 1px solid #f0f0f0;
+        vertical-align: middle;
+    }
+
+    /* Timetable Specific */
+    .preview-img {
+        max-width: 100%;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        margin-bottom: 15px;
+    }
+
+    .pdf-frame {
+        width: 100%;
+        height: 400px;
+        border: 1px solid #ddd;
+        margin-bottom: 15px;
+    }
+
+    .file-icon {
+        font-size: 3rem;
+        color: #6c757d;
+        display: block;
+        margin-bottom: 10px;
+    }
+</style>
+
+<div class="container mt-4">
+    <div class="d-flex align-items-center mb-4">
+        <a href="{{ url_for('hod.view_dept_staff') }}" class="btn btn-outline-secondary me-3"><i
+                class="fas fa-arrow-left"></i> Back</a>
+        <h3 class="fw-bold mb-0">Staff Details</h3>
+    </div>
+
+    <div class="row">
+        <!-- LEFT: Profile & Timetable -->
+        <div class="col-lg-6">
+            <!-- Profile -->
+            <div class="detail-card">
+                <div class="profile-header mb-4">
+                    <div class="staff-avatar-lg">{{ staff.name[:1] }}</div>
+                    <div>
+                        <h4 class="mb-0 fw-bold">{{ staff.name }}</h4>
+                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2">{{
+                            staff.branch }}</span>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="info-label">Username</div>
+                        <div class="info-value">{{ staff.username }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="info-label">Contact</div>
+                        <div class="info-value">{{ staff.contact_no }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timetable Section -->
+            <div class="detail-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-calendar-alt me-2 text-primary"></i>Timetable</h5>
+                </div>
+
+                {% if staff.timetable_file %}
+                <!-- ========================================== -->
+                <!-- STATE A: FILE EXISTS (Show File + DELETE) -->
+                <!-- ========================================== -->
+
+                <div class="text-center">
+                    {% if staff.timetable_file.endswith('.pdf') %}
+                    <iframe src="{{ url_for('static', filename='uploads/timetables/' + staff.timetable_file) }}"
+                        class="pdf-frame"></iframe>
+                    {% elif staff.timetable_file.endswith(('.png', '.jpg', '.jpeg')) %}
+                    <img src="{{ url_for('static', filename='uploads/timetables/' + staff.timetable_file) }}"
+                        class="preview-img" onclick="window.open(this.src)">
+                    <p class="small text-muted">Click image to view full size</p>
+                    {% else %}
+                    <div class="py-4 bg-light rounded mb-3">
+                        <i class="fas fa-file-alt file-icon"></i>
+                        <strong>{{ staff.timetable_file }}</strong>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-grid gap-2">
+                    <!-- 1. Download to Edit -->
+                    <a href="{{ url_for('static', filename='uploads/timetables/' + staff.timetable_file) }}" download
+                        class="btn btn-outline-primary">
+                        <i class="fas fa-download me-2"></i> Download File (To Edit)
+                    </a>
+
+                    <!-- 2. Delete (To enable re-upload) -->
+                    <form action="{{ url_for('hod.delete_timetable', staff_id=staff.staff_id) }}" method="POST"
+                        onsubmit="return confirm('Are you sure you want to delete this timetable?');">
+                        <button type="submit" class="btn btn-danger w-100">
+                            <i class="fas fa-trash-alt me-2"></i> Delete File
+                        </button>
+                    </form>
+                </div>
+
+                {% else %}
+                <!-- ========================================== -->
+                <!-- STATE B: NO FILE (Show UPLOAD Form Only)  -->
+                <!-- ========================================== -->
+
+                <div class="text-center py-5 bg-light rounded mb-3 border border-dashed">
+                    <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                    <h6 class="text-muted">No Timetable Uploaded</h6>
+                </div>
+
+                <form action="{{ url_for('hod.upload_timetable', staff_id=staff.staff_id) }}" method="POST"
+                    enctype="multipart/form-data">
+                    <label class="form-label fw-bold">Select File</label>
+                    <input type="file" name="timetable" class="form-control mb-3" required
+                        accept=".pdf, .png, .jpg, .jpeg, .doc, .docx, .xls, .xlsx">
+                    <button class="btn btn-primary w-100" type="submit">
+                        <i class="fas fa-upload me-2"></i> Upload Timetable
+                    </button>
+                </form>
+                <div class="text-center mt-2">
+                    <small class="text-muted">Supported: Images, PDF, Word, Excel</small>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Attendance History -->
+        <div class="col-lg-6">
+            <div class="detail-card">
+                <h5 class="fw-bold mb-3"><i class="fas fa-history me-2 text-warning"></i>Classes Taken History</h5>
+                <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
+                    <table class="clean-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Period</th>
+                                <th>Subject</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in history %}
+                            <tr>
+                                <td>{{ record.date.strftime('%d-%b-%Y') }}</td>
+                                <td><span class="badge bg-secondary">Period {{ record.period }}</span></td>
+                                <td>{{ record.subject }}</td>
+                                <td class="text-success"><i class="fas fa-check-circle"></i> Marked</td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4 text-muted">No classes recorded yet.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div style="height: 50px;"></div>
+</div>
+{% endblock %}
