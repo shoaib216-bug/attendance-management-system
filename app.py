@@ -2,6 +2,7 @@ import os
 from datetime import timedelta
 from flask import Flask, redirect, url_for
 from flask_login import LoginManager
+from sqlalchemy import text  # <--- IMPORT ADDED HERE FOR THE FIX
 from config import Config
 
 # 1. UPDATE: Imported HOD here
@@ -84,6 +85,20 @@ def index():
 @app.route('/healthz')
 def health_check():
     return "OK", 200
+
+# ==========================================
+# === TEMPORARY DB FIX ROUTE ===
+# ==========================================
+@app.route('/fix-db-schema')
+def fix_db_schema():
+    try:
+        # This SQL command adds the missing column to the live database
+        # We use text() to execute raw SQL safely
+        db.session.execute(text("ALTER TABLE staff ADD COLUMN IF NOT EXISTS timetable_file VARCHAR(255)"))
+        db.session.commit()
+        return "<h1>Success!</h1><p>Column 'timetable_file' has been added to the Staff table. You can now use the app.</p>"
+    except Exception as e:
+        return f"<h1>Error</h1><p>{str(e)}</p>"
 
 # ================================
 # === Render Production Server ===
