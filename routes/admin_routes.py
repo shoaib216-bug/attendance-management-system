@@ -381,17 +381,32 @@ def end_semester(sem_id):
 @admin_required
 def settings():
     if request.method == 'POST':
-        new_lat = request.form.get('latitude')
-        new_lon = request.form.get('longitude')
-        new_radius = request.form.get('radius')
-        geolocation_enabled_val = request.form.get('geolocation_enabled')
-        Setting.query.filter_by(setting_key='college_latitude').first().setting_value = new_lat
-        Setting.query.filter_by(setting_key='college_longitude').first().setting_value = new_lon
-        Setting.query.filter_by(setting_key='allowed_radius_meters').first().setting_value = new_radius
-        Setting.query.filter_by(setting_key='geolocation_enabled').first().setting_value = geolocation_enabled_val
+        # 1. Gather all possible settings from the form
+        settings_map = {
+            'college_latitude': request.form.get('latitude'),
+            'college_longitude': request.form.get('longitude'),
+            'allowed_radius_meters': request.form.get('radius'),
+            'geolocation_enabled': request.form.get('geolocation_enabled')
+        }
+
+        # 2. Loop through each setting and Update OR Create (Upsert)
+        for key, value in settings_map.items():
+            if value is not None: # Check so we don't accidentally nullify things improperly
+                setting_obj = Setting.query.filter_by(setting_key=key).first()
+                
+                if setting_obj:
+                    # If setting exists, update it
+                    setting_obj.setting_value = value
+                else:
+                    # If setting does NOT exist (Render empty DB), create it
+                    new_setting = Setting(setting_key=key, setting_value=value)
+                    db.session.add(new_setting)
+
         db.session.commit()
         flash('Settings updated successfully!', 'success')
         return redirect(url_for('admin.settings'))
+    
+    # GET Request: Display Settings
     settings_list = Setting.query.all()
     settings = {s.setting_key: s.setting_value for s in settings_list}
     return render_template('admin/settings.html', settings=settings)
