@@ -30,25 +30,20 @@ def _send_twilio_sms(to_number, message_body):
         print(f"!!! TWILIO SMS FAILED. Error: {e} !!!")
         return False
 
-# =========================================================================
-# === THIS IS THE MISSING FUNCTION FOR OTPs ===
-# =========================================================================
 def send_otp_sms(to_number, otp):
     """Formats and sends an OTP message via Twilio."""
     print(f"--- Attempting to send OTP to {to_number} via Twilio ---")
     message = f"Your OTP for Attendance Management is: {otp}. It is valid for 10 minutes."
     return _send_twilio_sms(to_number, message)
-# =========================================================================
 
-# =========================================================================
-# === THIS IS THE FUNCTION FOR ABSENTEE NOTIFICATIONS ===
-# =========================================================================
 def send_absent_notification_sms(to_number, student_name, date_str, period, subject, time_str):
     """Formats and sends a custom absentee notification via Twilio."""
     print(f"--- Attempting to send ABSENT notification to {to_number} via Twilio ---")
+    
+    # The time_str passed here is now in IST format (e.g., "10:30 AM")
     message = (
         f"Attendance Alert: Your ward, {student_name}, was marked ABSENT "
-        f"for period {period} ({subject}) on {date_str} at {time_str}. "
+        f"for period {period} ({subject}) on {date_str} at approx {time_str}. "
         f"- Attendance Mgmt"
     )
     return _send_twilio_sms(to_number, message)

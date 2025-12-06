@@ -2,12 +2,19 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from flask_login import login_required, current_user
 from models.models import db, Student, Attendance, Staff, Setting
 from datetime import datetime
+import pytz # <--- Import pytz for Timezone conversion
 from sqlalchemy import distinct
 from functools import wraps
 from math import sin, cos, sqrt, atan2, radians
 from services.sms_service import send_absent_notification_sms
 
 staff_bp = Blueprint('staff', __name__)
+
+# Helper function for IST Time
+def get_ist_time():
+    utc_now = datetime.utcnow()
+    ist_tz = pytz.timezone('Asia/Kolkata')
+    return utc_now.replace(tzinfo=pytz.utc).astimezone(ist_tz)
 
 def staff_required(f):
     @wraps(f)
@@ -27,27 +34,30 @@ def calculate_distance(lat1, lon1, lat2, lon2):
 @login_required
 @staff_required
 def dashboard():
+    # Use IST for checking today's attendance
+    ist_now = get_ist_time()
+    today = ist_now.date()
+    
     if request.method == 'POST':
         branch, semester, period, subject = request.form.get('branch'), request.form.get('semester'), request.form.get('period'), request.form.get('subject')
-        today = datetime.utcnow().date()
+        
         if not all([branch, semester, period, subject]):
             flash('All fields are required.', 'danger'); return redirect(url_for('staff.dashboard'))
+        
         existing = Attendance.query.join(Student).filter(Student.branch == branch, Student.semester == semester, Attendance.date == today, Attendance.period == period).first()
         if existing:
             flash(f'Attendance for {branch} (Sem {semester}) for period {period} has already been taken by {existing.staff.name}.', 'warning'); return redirect(url_for('staff.dashboard'))
+        
         students = Student.query.filter_by(branch=branch, semester=semester).order_by(Student.roll_no).all()
         if not students:
             flash('No students found for the selected criteria.', 'warning'); return redirect(url_for('staff.dashboard'))
+        
         return render_template('staff/mark_attendance.html', students=students, date=today.strftime('%d-%m-%Y'), period=period, subject=subject)
     
     branches = [b[0] for b in db.session.query(distinct(Student.branch)).order_by(Student.branch).all()]
     semesters = [s[0] for s in db.session.query(distinct(Student.semester)).order_by(Student.semester).all()]
     return render_template('staff/dashboard.html', branches=branches, semesters=semesters)
 
-# =========================================================================
-# === THIS IS THE CORRECTLY FORMATTED FUNCTION ===
-# The extra 'd' has been removed.
-# =========================================================================
 @staff_bp.route('/submit-attendance', methods=['POST'])
 @login_required
 @staff_required
@@ -66,8 +76,12 @@ def submit_attendance():
             flash(f'Attendance submission failed. You are {int(distance)} meters away from campus.', 'danger'); return redirect(url_for('staff.dashboard'))
     
     student_ids, period, subject = request.form.getlist('student_id'), request.form.get('period'), request.form.get('subject')
-    now = datetime.utcnow()
-    attendance_date = now.date()
+    
+    # GET EXACT IST TIME
+    ist_now = get_ist_time()
+    attendance_date = ist_now.date()
+    time_str = ist_now.strftime('%I:%M %p') # e.g., "10:30 AM"
+
     if not all([period, subject]):
         flash('Error: Period or Subject information was missing.', 'danger'); return redirect(url_for('staff.dashboard'))
 
@@ -79,18 +93,18 @@ def submit_attendance():
             if status == 'Absent':
                 student = Student.query.get(student_id)
                 if student and student.parent_contact:
-                    time_str = now.strftime('%I:%M %p')
+                    # Pass the IST Time string to the SMS service
                     send_absent_notification_sms(
                         to_number=student.parent_contact, 
                         student_name=student.name, 
                         date_str=attendance_date.strftime('%d-%b-%Y'), 
                         period=period,
                         subject=subject,
-                        time_str=time_str
+                        time_str=time_str # <--- This is now IST time
                     )
     
     db.session.commit()
-    success_message = f'Attendance for period {period} submitted successfully!'
+    success_message = f'Attendance for period {period} submitted successfully at {time_str}!'
     if settings.get('geolocation_enabled') == 'true':
         success_message = "Location Verified! " + success_message
     flash(success_message, 'success')

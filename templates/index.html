@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7fb;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* TOP TITLE STRIP */
+        header {
+            background-color: #0d6efd; /* Your Website Main Blue */
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* MENU STRIP */
+        nav {
+            background-color: #fff;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border-bottom: 3px solid #e9ecef;
+        }
+
+        /* MENU LINKS */
+        nav a {
+            background-color: #f8f9fa;
+            color: #0d6efd;
+            font-weight: bold;
+            padding: 10px 20px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: 0.3s;
+            border: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        nav a:hover {
+            background-color: #0d6efd;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+        }
+
+        /* MAIN CONTENT */
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            flex: 1;
+        }
+
+        h2 {
+            color: #0d6efd;
+            font-size: 28px;
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        p {
+            line-height: 1.8;
+            font-size: 16px;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .btn-section {
+            margin-top: 40px;
+            text-align: center;
+        }
+
+        a.button {
+            background-color: #0d6efd;
+            color: white;
+            padding: 15px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 18px;
+            transition: 0.3s ease;
+            box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+        }
+
+        a.button:hover {
+            background-color: #0b5ed7;
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.9rem;
+            background: #f4f7fb;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- TOP TITLE STRIP -->
+    <header>
+        <h1><i class="fas fa-user-check"></i> Attendance Management</h1>
+    </header>
+
+    <!-- MENU STRIP -->
+    <nav>
+        <!-- Logic to check if user is already logged in -->
+        {% if current_user.is_authenticated %}
+            {% if isinstance(current_user, Admin) %}
+                <a href="{{ url_for('admin.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Go to Dashboard</a>
+            {% elif isinstance(current_user, Staff) %}
+                <a href="{{ url_for('staff.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Go to Dashboard</a>
+            {% elif isinstance(current_user, HOD) %}
+                <a href="{{ url_for('hod.dashboard') }}"><i class="fas fa-tachometer-alt"></i> Go to Dashboard</a>
+            {% endif %}
+            <a href="{{ url_for('auth.logout') }}" style="background-color: #dc3545; color: white; border-color: #dc3545;">Logout</a>
+        {% else %}
+            <!-- Links for Guests -->
+            <a href="{{ url_for('auth.admin_login') }}"><i class="fas fa-user-shield"></i> Admin Login</a>
+            <a href="{{ url_for('auth.hod_login') }}"><i class="fas fa-user-tie"></i> HOD Login</a>
+            <a href="{{ url_for('auth.staff_login') }}"><i class="fas fa-chalkboard-teacher"></i> Staff Login</a>
+            <a href="{{ url_for('public.view_parent_attendance') }}"><i class="fas fa-user-friends"></i> Parent View</a>
+            <a href="{{ url_for('public.view_student_attendance') }}"><i class="fas fa-user-graduate"></i> Student View</a>
+        {% endif %}
+    </nav>
+
+    <div class="container">
+        <h2>About The Project</h2>
+
+        <p>
+            The <strong>Attendance Management System</strong> is a digital solution designed to automate, simplify, and improve the process of recording and monitoring student attendance in educational institutions.
+        </p>
+
+        <p>
+            This system enables instant <strong>SMS alerts</strong> to parents when a student is marked absent, ensuring real-time communication and transparency.
+        </p>
+
+        <p>
+            Attendance data is stored securely in a database, reducing paperwork and helping teachers, HODs, and Admins access detailed reports effortlessly.
+        </p>
+
+        <p>
+            By automating attendance tracking and improving communication, the system enhances accountability, reduces absenteeism, and supports better academic performance.
+        </p>
+
+        {% if not current_user.is_authenticated %}
+        <div class="btn-section">
+            <a href="{{ url_for('auth.staff_login') }}" class="button">Login to Portal</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <footer>
+        &copy; 2025 Attendance Management System. All Rights Reserved.
+    </footer>
+
+</body>
+</html>

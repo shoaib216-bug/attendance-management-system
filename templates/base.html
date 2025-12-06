@@ -4,75 +4,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <!-- ================================================================= -->
-    <!-- === SEO SETTINGS === -->
-    <!-- ================================================================= -->
-    <title>Attendance Management System - Official Portal</title>
-    <meta name="description"
-        content="Official Attendance Management System. Login for Admins, Staff, HODs, Students, and Parents.">
-    <meta name="keywords"
-        content="Attendance Management, Student Attendance, College System, Online Attendance, Staff Login">
-    <meta name="robots" content="index, follow">
-    <!-- ================================================================= -->
-    <meta name="google-site-verification" content="glaCwdBs6lMdNStSoH_-_a45dVRoR9PhcApiIq8PFKQ" />
+    <title>Attendance System</title>
 
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* Profile Icon Style */
+        .nav-profile {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            text-decoration: none;
+            padding: 5px 10px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+
+        .nav-profile:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .nav-profile img {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid white;
+            object-fit: cover;
+        }
+    </style>
 </head>
 
 <body>
     <nav class="navbar">
         <div class="container">
-            <a href="{{ url_for('index') }}" class="navbar-brand">Attendance Management</a>
+            <a href="/" class="navbar-brand">Attendance System</a>
 
-            <!-- ========================================================================= -->
-            <!-- === NAVIGATION LOGIC === -->
-            <!-- ========================================================================= -->
             <div class="navbar-links">
-                {% if current_user and current_user.is_authenticated %}
-                <!-- This block ONLY shows when a user is truly logged in -->
+                {% if current_user.is_authenticated %}
 
+                <!-- Dashboard Links -->
                 {% if isinstance(current_user, Admin) %}
-                <a href="{{ url_for('admin.dashboard') }}">Admin Dashboard</a>
-
+                <a href="{{ url_for('admin.dashboard') }}">Dashboard</a>
                 {% elif isinstance(current_user, Staff) %}
-                <a href="{{ url_for('staff.dashboard') }}">Staff Dashboard</a>
-
-                <!-- NEW: HOD Dashboard Link -->
+                <a href="{{ url_for('staff.dashboard') }}">Dashboard</a>
                 {% elif isinstance(current_user, HOD) %}
-                <a href="{{ url_for('hod.dashboard') }}">HOD Dashboard</a>
+                <a href="{{ url_for('hod.dashboard') }}">Dashboard</a>
                 {% endif %}
+
+                <!-- CIRCULAR PROFILE ICON -->
+                <a href="{{ url_for('auth.profile') }}" class="nav-profile">
+                    <img
+                        src="{{ url_for('static', filename='images/profiles/' + (current_user.profile_image if current_user.profile_image else 'default.png')) }}">
+                    <span>Profile</span>
+                </a>
 
                 <a href="{{ url_for('auth.logout') }}">Logout</a>
 
                 {% else %}
-                <!-- This block shows when NO ONE is logged in -->
+                <!-- PUBLIC LINKS (Restored) -->
                 <a href="{{ url_for('public.view_student_attendance') }}">Student View</a>
                 <a href="{{ url_for('public.view_parent_attendance') }}">Parent View</a>
 
+                <!-- LOGIN LINKS -->
                 <a href="{{ url_for('auth.staff_login') }}">Staff Login</a>
-                <a href="{{ url_for('auth.hod_login') }}">HOD Login</a> <!-- NEW LINK -->
+                <a href="{{ url_for('auth.hod_login') }}">HOD Login</a>
                 <a href="{{ url_for('auth.admin_login') }}">Admin Login</a>
                 {% endif %}
             </div>
-            <!-- ========================================================================= -->
-
         </div>
     </nav>
+
     <main class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
-        {% for category, message in messages %}
-        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% for category, msg in messages %}
+        <div class="alert alert-{{ category }}">{{ msg }}</div>
         {% endfor %}
         {% endif %}
         {% endwith %}
         {% block content %}{% endblock %}
     </main>
+
     <footer class="footer">
-        <p>&copy; 2025 Attendance Management System</p>
+        <p>&copy; 2025 Attendance System</p>
     </footer>
+
     <script>
         function togglePassword(fieldId) {
             const field = document.getElementById(fieldId); if (!field) return;
