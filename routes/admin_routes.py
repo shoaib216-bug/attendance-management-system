@@ -16,6 +16,21 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+# --- HELPER FUNCTION: Get Branches from Settings ---
+def get_college_branches():
+    """Fetch branches defined in Settings, ensuring General always exists."""
+    setting = Setting.query.filter_by(setting_key='college_branches').first()
+    branches = []
+    if setting and setting.setting_value:
+        # Split string by comma, strip whitespace, remove empty strings
+        branches = [b.strip() for b in setting.setting_value.split(',') if b.strip()]
+    
+    # Ensure 'General' always exists for First Year/Science staff
+    if "General" not in branches:
+        branches.append("General")
+    
+    return sorted(branches)
+
 # --- Core Admin Routes ---
 @admin_bp.route('/dashboard')
 @login_required
@@ -27,11 +42,14 @@ def dashboard():
 @login_required
 @admin_required
 def add_student():
+    # We can also use the dynamic branches for students if needed
+    branches = get_college_branches() 
+
     if request.method == 'POST':
         roll_no = request.form.get('roll_no')
         if Student.query.filter_by(roll_no=roll_no).first():
             flash(f'Roll Number {roll_no} is already registered.', 'danger')
-            return render_template('admin/add_student.html', form_data=request.form)
+            return render_template('admin/add_student.html', form_data=request.form, branches=branches)
 
         new_student = Student(
             name=request.form.get('name'), 
@@ -44,13 +62,16 @@ def add_student():
         db.session.commit()
         flash(f'Student "{new_student.name}" added successfully!', 'success')
         return redirect(url_for('admin.view_students'))
-    return render_template('admin/add_student.html')
+    
+    return render_template('admin/add_student.html', branches=branches)
 
 @admin_bp.route('/edit-student/<int:student_id>', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_student(student_id):
     student = Student.query.get_or_404(student_id)
+    branches = get_college_branches()
+
     if request.method == 'POST':
         student.name = request.form.get('name')
         student.branch = request.form.get('branch')
@@ -60,7 +81,7 @@ def edit_student(student_id):
         db.session.commit()
         flash('Student details updated successfully!', 'success')
         return redirect(url_for('admin.view_students'))
-    return render_template('admin/edit_student.html', student=student)
+    return render_template('admin/edit_student.html', student=student, branches=branches)
 
 @admin_bp.route('/delete-student/<int:student_id>', methods=['POST'])
 @login_required
@@ -92,11 +113,8 @@ def delete_all_students():
 @login_required
 @admin_required
 def add_staff():
-    # 1. Fetch Branches and Add 'General'
-    branches_data = db.session.query(Semester.branch).distinct().all()
-    branches = [b[0] for b in branches_data]
-    if "General" not in branches:
-        branches.append("General")
+    # 1. Fetch Branches from Settings
+    branches = get_college_branches()
 
     if request.method == 'POST':
         if Staff.query.filter_by(username=request.form.get('username')).first():
@@ -122,12 +140,7 @@ def add_staff():
 @admin_required
 def edit_staff(staff_id):
     staff = Staff.query.get_or_404(staff_id)
-    
-    # 1. Fetch Branches and Add 'General'
-    branches_data = db.session.query(Semester.branch).distinct().all()
-    branches = [b[0] for b in branches_data]
-    if "General" not in branches:
-        branches.append("General")
+    branches = get_college_branches()
 
     if request.method == 'POST':
         staff.name = request.form.get('name')
@@ -161,11 +174,8 @@ def delete_staff(staff_id):
 @login_required
 @admin_required
 def add_hod():
-    # 1. Fetch Branches and Add 'General' option
-    branches_data = db.session.query(Semester.branch).distinct().all()
-    branches = [b[0] for b in branches_data]
-    if "General" not in branches:
-        branches.append("General")
+    # 1. Fetch Branches from Settings
+    branches = get_college_branches()
 
     if request.method == 'POST':
         username = request.form.get('username')
@@ -192,12 +202,7 @@ def add_hod():
 @admin_required
 def edit_hod(hod_id):
     hod = HOD.query.get_or_404(hod_id)
-    
-    # 1. Fetch Branches and Add 'General'
-    branches_data = db.session.query(Semester.branch).distinct().all()
-    branches = [b[0] for b in branches_data]
-    if "General" not in branches:
-        branches.append("General")
+    branches = get_college_branches()
 
     if request.method == 'POST':
         new_username = request.form.get('username')
@@ -304,8 +309,8 @@ def view_students():
 
     students = query.order_by(Student.roll_no).all()
     
-    all_students = Student.query.with_entities(Student.branch).all()
-    available_branches = sorted(list(set([s.branch for s in all_students if s.branch])))
+    # Get available branches from Settings for the filter dropdown
+    available_branches = get_college_branches()
     available_semesters = [1, 2, 3, 4, 5, 6]
     
     return render_template('admin/view_students.html', 
@@ -386,12 +391,17 @@ def settings():
             'college_latitude': request.form.get('latitude'),
             'college_longitude': request.form.get('longitude'),
             'allowed_radius_meters': request.form.get('radius'),
-            'geolocation_enabled': request.form.get('geolocation_enabled')
+            'geolocation_enabled': request.form.get('geolocation_enabled'),
+            'college_branches': request.form.get('branches')  # <--- NEW FIELD for Branches
         }
 
         # 2. Loop through each setting and Update OR Create (Upsert)
         for key, value in settings_map.items():
-            if value is not None: # Check so we don't accidentally nullify things improperly
+            if value is not None: 
+                # Clean up branches string (remove extra spaces)
+                if key == 'college_branches':
+                    value = ",".join([b.strip() for b in value.split(',') if b.strip()])
+
                 setting_obj = Setting.query.filter_by(setting_key=key).first()
                 
                 if setting_obj:

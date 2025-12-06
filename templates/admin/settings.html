@@ -1,44 +1,163 @@
 {% extends "base.html" %}
-
 {% block title %}System Settings{% endblock %}
 
 {% block content %}
-    <h2>System Settings</h2>
-    <div class="form-container" style="max-width: 700px;">
-        <h3>Geolocation Settings</h3>
-        <p>Set the college's central coordinates and the allowed radius for staff to mark attendance.</p>
-        <hr style="margin-bottom: 1.5rem;">
-        
-        <form method="POST">
-            <!-- In settings.html, inside the <form> -->
-<hr style="margin: 2rem 0;">
-<h3>Feature Toggles</h3>
-<div class="form-group">
-    <label for="geolocation_enabled">Enable Geolocation Lock for Attendance?</label>
-    <select id="geolocation_enabled" name="geolocation_enabled" class="form-control">
-        <option value="true" {% if settings.geolocation_enabled == 'true' %}selected{% endif %}>Yes, Enforce Location Check</option>
-        <option value="false" {% if settings.geolocation_enabled == 'false' %}selected{% endif %}>No, Disable Location Check</option>
-    </select>
+<style>
+    /* Consistent Styling matching Add Staff/HOD pages */
+    .form-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-header {
+        text-align: center;
+        margin-bottom: 2rem;
+        color: #333;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+        color: #444;
+    }
+
+    /* Styles for Inputs, Selects, and Textareas */
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        box-sizing: border-box;
+        /* Ensures padding doesn't widen the element */
+        transition: border-color 0.3s ease;
+        font-family: inherit;
+        /* Ensures textarea font matches inputs */
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+        border-color: #0d6efd;
+        outline: none;
+    }
+
+    .help-text {
+        display: block;
+        /* Forces new line */
+        margin-top: 0.5rem;
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 0.75rem;
+        font-size: 1rem;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background-color 0.2s;
+    }
+
+    .btn:hover {
+        background-color: #0b5ed7;
+    }
+
+    .tip-box {
+        margin-top: 2rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border-left: 4px solid #0d6efd;
+        font-size: 0.9rem;
+        color: #555;
+    }
+</style>
+
+<div class="form-container">
+    <h2 class="form-header">System Settings</h2>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div style="padding: 10px; margin-bottom: 15px; border-radius: 4px; 
+               background-color: {{ '#d4edda' if category == 'success' else '#f8d7da' }};
+               color: {{ '#155724' if category == 'success' else '#721c24' }};">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <!-- Latitude -->
+        <div class="form-group">
+            <label for="latitude">College Latitude</label>
+            <input type="text" id="latitude" name="latitude" value="{{ settings.get('college_latitude', '') }}"
+                placeholder="e.g. 12.9716" required>
+        </div>
+
+        <!-- Longitude -->
+        <div class="form-group">
+            <label for="longitude">College Longitude</label>
+            <input type="text" id="longitude" name="longitude" value="{{ settings.get('college_longitude', '') }}"
+                placeholder="e.g. 77.5946" required>
+        </div>
+
+        <!-- Radius -->
+        <div class="form-group">
+            <label for="radius">Allowed Radius (in meters)</label>
+            <input type="number" id="radius" name="radius" value="{{ settings.get('allowed_radius_meters', '100') }}"
+                required>
+        </div>
+
+        <!-- Geolocation Toggle -->
+        <div class="form-group">
+            <label for="geolocation_enabled">Geolocation Check</label>
+            <select id="geolocation_enabled" name="geolocation_enabled">
+                <option value="1" {% if settings.get('geolocation_enabled')=='1' %}selected{% endif %}>Enabled (Strict)
+                </option>
+                <option value="0" {% if settings.get('geolocation_enabled')=='0' %}selected{% endif %}>Disabled
+                    (Testing)</option>
+            </select>
+            <small class="help-text">If disabled, staff can mark attendance from anywhere.</small>
+        </div>
+
+        <!-- College Branches (Fixed Styling) -->
+        <div class="form-group">
+            <label for="branches">College Branches (comma separated)</label>
+            <textarea id="branches" name="branches" rows="3"
+                placeholder="e.g. CSE, ECE, MECH, CIVIL, AI&DS">{{ settings.get('college_branches', '') }}</textarea>
+            <small class="help-text">
+                Enter branch codes separated by commas (e.g., CSE, ECE). These will appear in the dropdowns when adding
+                Staff or HODs.
+            </small>
+        </div>
+
+        <button type="submit" class="btn">Save Settings</button>
+    </form>
+
+    <div class="tip-box">
+        <strong>Tip:</strong> You can get accurate Latitude and Longitude from
+        <a href="https://www.google.com/maps" target="_blank" style="color:#0d6efd; text-decoration:underline;">Google
+            Maps</a>
+        by right-clicking on your college location.
+    </div>
 </div>
-            <div class="form-group">
-                <label for="latitude">College Latitude</label>
-                <input type="text" id="latitude" name="latitude" value="{{ settings.college_latitude }}" required>
-            </div>
-            <div class="form-group">
-                <label for="longitude">College Longitude</label>
-                <input type="text" id="longitude" name="longitude" value="{{ settings.college_longitude }}" required>
-            </div>
-            <div class="form-group">
-                <label for="radius">Allowed Radius (in meters)</label>
-                <input type="number" id="radius" name="radius" value="{{ settings.allowed_radius_meters }}" min="50" required>
-            </div>
-            <button type="submit" class="btn">Save Settings</button>
-        </form>
-        <p style="margin-top: 1rem; font-size: 0.9rem; color: #666;">
-            Tip: You can get coordinates from <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Google Maps</a> by right-clicking on a location.
-        </p>
-    </div>
-    <div style="text-align: center; margin-top: 2rem;">
-        <a href="{{ url_for('admin.dashboard') }}" class="btn" style="background-color: #6c757d;">Back to Dashboard</a>
-    </div>
 {% endblock %}

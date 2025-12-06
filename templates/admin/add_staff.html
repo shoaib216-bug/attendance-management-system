@@ -3,7 +3,6 @@
 
 {% block content %}
 <style>
-    /* Same CSS as Add HOD for consistency */
     .form-container {
         max-width: 500px;
         margin: 2rem auto;
@@ -63,6 +62,20 @@
 
 <div class="form-container">
     <h2 style="text-align: center; margin-bottom: 1.5rem;">Add New Staff Member</h2>
+
+    <!-- Flash Messages for Errors/Success -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    {% for category, message in messages %}
+    <div style="padding: 10px; margin-bottom: 15px; border-radius: 4px; 
+               background-color: {{ '#d4edda' if category == 'success' else '#f8d7da' }};
+               color: {{ '#155724' if category == 'success' else '#721c24' }};">
+        {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
     <form method="POST">
         <div class="form-group">
             <label for="name">Full Name</label>
@@ -71,15 +84,16 @@
 
         <div class="form-group">
             <label for="branch">Branch</label>
-            <!-- Changed Input to Select -->
             <select id="branch" name="branch" required>
                 <option value="" disabled selected>Select Branch</option>
+
+                <!-- Loops through branches defined in Settings -->
                 {% for branch in branches %}
                 <option value="{{ branch }}">{{ branch }}</option>
                 {% endfor %}
             </select>
             <small class="text-muted" style="display:block; margin-top:5px; font-size: 0.85rem; color:#666;">
-                * Select <b>"General"</b> for Science/humanities staff.
+                * Select <b>"General"</b> for Science/Humanities staff (Maths, Physics, etc).
             </small>
         </div>
 
@@ -103,4 +117,26 @@
         <button type="submit" class="btn">Add Staff</button>
     </form>
 </div>
+
+<script>
+    // Toggle Password Visibility
+    function togglePassword(id) {
+        const input = document.getElementById(id);
+        const icon = event.target;
+        if (input.type === "password") {
+            input.type = "text";
+            icon.classList.remove("fa-eye");
+            icon.classList.add("fa-eye-slash");
+        } else {
+            input.type = "password";
+            icon.classList.remove("fa-eye-slash");
+            icon.classList.add("fa-eye");
+        }
+    }
+
+    // Input Filter (Only allows specific regex chars)
+    function filterInput(input, regex) {
+        input.value = input.value.match(regex) ? input.value.match(regex).join('') : '';
+    }
+</script>
 {% endblock %}
